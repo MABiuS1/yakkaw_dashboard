@@ -43,7 +43,7 @@ export const FormDialog: React.FC<FormDialogProps> = ({
             className="border-blue-200 focus:border-blue-500 focus:ring-blue-500"
           />
           <DialogFooter>
-            {/* <Button type="submit" onClick={() => onOpenChange(false)}>Cancel</Button> */}
+            <Button type="submit" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white">
               {submitButtonText}
             </Button>

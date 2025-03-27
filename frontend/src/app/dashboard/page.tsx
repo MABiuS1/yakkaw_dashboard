@@ -38,12 +38,19 @@ import DashNotificationCard from "@/components/ui/DashNotificationCard";
 import DashSponsorCard from "@/components/ui/DashSponsorsCard";
 import DashNewsCard from "@/components/ui/DashNewsCard";
 import DashCategoryCard from "@/components/ui/DashCategoryCard";
+import Link from "next/link";
 
 const DashboardPage: React.FC = () => {
   const { filteredNotifications, isLoading: loadingNotifications } = useNotifications();
   const { filteredSponsors, isLoading: loadingSponsors } = useSponsors();
   const { filteredNews, isLoading: loadingNews } = useNews();
   const { categories, isLoading: loadingCategories } = useCategories();
+
+  // State for controlling number of items shown
+  const [showAllNotifications, setShowAllNotifications] = React.useState(false);
+  const [showAllSponsors, setShowAllSponsors] = React.useState(false);
+  const [showAllNews, setShowAllNews] = React.useState(false);
+  const [showAllCategories, setShowAllCategories] = React.useState(false);
 
   // Mock data for the charts (replace with real data from your API)
   const notificationTrends = [
@@ -219,18 +226,30 @@ const DashboardPage: React.FC = () => {
                   {filteredNotifications.length} total
                 </span>
               </div>
-              <Card className="border-none shadow-md">
-                <CardContent className="p-4">
+              <Card className="border-none shadow-md h-[400px] overflow-hidden">
+                <CardContent className="p-4 h-full flex flex-col">
                   {filteredNotifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8">
                       <Bell className="h-12 w-12 text-slate-300 mb-3" />
                       <p className="text-slate-500">No notifications yet</p>
                     </div>
                   ) : (
-                    <div className="grid gap-4">
-                      {filteredNotifications.slice(0, 3).map((notification) => (
-                        <DashNotificationCard key={notification.id} notification={notification} />
-                      ))}
+                    <div className="flex flex-col h-full">
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="grid gap-4">
+                          {filteredNotifications.slice(0, 4).map((notification) => (
+                            <DashNotificationCard key={notification.id} notification={notification} />
+                          ))}
+                        </div>
+                      </div>
+                      {filteredNotifications.length > 4 && (
+                        <Link
+                          href="/dashboard/notifications"
+                          className="flex items-center justify-center gap-2 text-sm text-blue-600 hover:text-blue-700 mt-4 pt-4 border-t"
+                        >
+                          View All Notifications <ChevronDown className="h-4 w-4" />
+                        </Link>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -245,18 +264,30 @@ const DashboardPage: React.FC = () => {
                   {filteredSponsors.length} total
                 </span>
               </div>
-              <Card className="border-none shadow-md">
-                <CardContent className="p-4">
+              <Card className="border-none shadow-md h-[400px] overflow-hidden">
+                <CardContent className="p-4 h-full flex flex-col">
                   {filteredSponsors.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8">
-                      <Users className="h-12 w-12 text-slate-300 mb-3" />
+                      <Gift className="h-12 w-12 text-slate-300 mb-3" />
                       <p className="text-slate-500">No sponsors yet</p>
                     </div>
                   ) : (
-                    <div className="grid gap-4">
-                      {filteredSponsors.slice(0, 3).map((sponsor) => (
-                        <DashSponsorCard key={sponsor.id} sponsor={sponsor} />
-                      ))}
+                    <div className="flex flex-col h-full">
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="grid gap-4">
+                          {filteredSponsors.slice(0, 4).map((sponsor) => (
+                            <DashSponsorCard key={sponsor.id} sponsor={sponsor} />
+                          ))}
+                        </div>
+                      </div>
+                      {filteredSponsors.length > 4 && (
+                        <Link
+                          href="/dashboard/sponsors"
+                          className="flex items-center justify-center gap-2 text-sm text-amber-600 hover:text-amber-700 mt-4 pt-4 border-t"
+                        >
+                          View All Sponsors <ChevronDown className="h-4 w-4" />
+                        </Link>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -271,18 +302,30 @@ const DashboardPage: React.FC = () => {
                   {filteredNews.length} total
                 </span>
               </div>
-              <Card className="border-none shadow-md">
-                <CardContent className="p-4">
+              <Card className="border-none shadow-md h-[400px] overflow-hidden">
+                <CardContent className="p-4 h-full flex flex-col">
                   {filteredNews.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8">
                       <Newspaper className="h-12 w-12 text-slate-300 mb-3" />
                       <p className="text-slate-500">No news yet</p>
                     </div>
                   ) : (
-                    <div className="grid gap-4">
-                      {filteredNews.slice(0, 3).map((news) => (
-                        <DashNewsCard key={news.id} news={news} />
-                      ))}
+                    <div className="flex flex-col h-full">
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="grid gap-4">
+                          {filteredNews.slice(0, 4).map((news) => (
+                            <DashNewsCard key={news.id} news={news} />
+                          ))}
+                        </div>
+                      </div>
+                      {filteredNews.length > 4 && (
+                        <Link
+                          href="/dashboard/news"
+                          className="flex items-center justify-center gap-2 text-sm text-purple-600 hover:text-purple-700 mt-4 pt-4 border-t"
+                        >
+                          View All News <ChevronDown className="h-4 w-4" />
+                        </Link>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -297,18 +340,30 @@ const DashboardPage: React.FC = () => {
                   {categories.length} total
                 </span>
               </div>
-              <Card className="border-none shadow-md">
-                <CardContent className="p-4">
+              <Card className="border-none shadow-md h-[400px] overflow-hidden">
+                <CardContent className="p-4 h-full flex flex-col">
                   {categories.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8">
                       <FolderOpen className="h-12 w-12 text-slate-300 mb-3" />
                       <p className="text-slate-500">No categories yet</p>
                     </div>
                   ) : (
-                    <div className="grid gap-4">
-                      {categories.slice(0, 3).map((category) => (
-                        <DashCategoryCard key={category.id} category={category} />
-                      ))}
+                    <div className="flex flex-col h-full">
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="grid gap-4">
+                          {categories.slice(0, 4).map((category) => (
+                            <DashCategoryCard key={category.id} category={category} />
+                          ))}
+                        </div>
+                      </div>
+                      {categories.length > 4 && (
+                        <Link
+                          href="/dashboard/categories"
+                          className="flex items-center justify-center gap-2 text-sm text-emerald-600 hover:text-emerald-700 mt-4 pt-4 border-t"
+                        >
+                          View All Categories <ChevronDown className="h-4 w-4" />
+                        </Link>
+                      )}
                     </div>
                   )}
                 </CardContent>

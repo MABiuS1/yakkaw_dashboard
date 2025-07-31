@@ -13,6 +13,8 @@ export const useNotifications = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
   const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+const [selectedNotification, setSelectedNotification] = useState(null);
   const [currentNotification, setCurrentNotification] = useState<Notification>({
     id: null,
     title: "",
@@ -133,5 +135,9 @@ export const useNotifications = () => {
     handleCreate,
     handleUpdate,
     handleDelete,
+    isViewDialogOpen,
+    setIsViewDialogOpen,
+    selectedNotification,
+    setSelectedNotification
   };
 };

@@ -34,7 +34,7 @@ import {
   CartesianGrid,
   Legend
 } from "recharts";
-import DashNotificationCard from "@/components/ui/DashNotificationCard";
+import DashNotificationCard from "@/components/notifications/DashNotificationCard";
 import DashSponsorCard from "@/components/ui/DashSponsorsCard";
 import DashNewsCard from "@/components/ui/DashNewsCard";
 import DashCategoryCard from "@/components/ui/DashCategoryCard";

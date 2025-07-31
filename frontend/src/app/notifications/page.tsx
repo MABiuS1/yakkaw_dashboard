@@ -1,18 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Search, Loader2, Plus } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotification";
-import { NotificationCard } from "@/components/ui/NotificationCard";
-import { FormDialog } from "@/components/ui/FormNotificationDialog";
+import { NotificationCard } from "@/components/notifications/NotificationCard";
+import { FormDialog } from "@/components/notifications/FormNotificationDialog";
 import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
 import Navbar from "@/components/ui/Navbar";
+import { NotificationDialog } from "@/components/notifications/NotificationDialog";
 
 const NotificationPage: React.FC = () => {
+    const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const {
     filteredNotifications,
     searchQuery,
@@ -74,7 +77,7 @@ const NotificationPage: React.FC = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="p-6 max-w-7xl mx-auto"
+          className="max-w-7xl mx-auto"
         >
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -138,19 +141,24 @@ const NotificationPage: React.FC = () => {
                 </motion.div>
               ) : (
                 filteredNotifications.map((notification) => (
-                  <NotificationCard
-                    key={notification.id}
-                    notification={notification}
-                    onEdit={() => {
-                      setCurrentNotification(notification);
-                      setIsEditDialogOpen(true);
-                    }}
-                    onDelete={() => {
-                      setNotificationToDelete(notification.id);
-                      setIsConfirmDialogOpen(true);
-                    }}
-                  />
-                ))
+  <NotificationCard
+    key={notification.id}
+    notification={notification}
+    onEdit={() => {
+      setCurrentNotification(notification);
+      setIsEditDialogOpen(true);
+    }}
+    onDelete={() => {
+      setNotificationToDelete(notification.id);
+      setIsConfirmDialogOpen(true);
+    }}
+    onView={() => {
+      setSelectedNotification(notification);
+      setIsViewDialogOpen(true);
+    }}
+  />
+))
+
               )}
             </motion.div>
           </AnimatePresence>
@@ -181,6 +189,12 @@ const NotificationPage: React.FC = () => {
           onOpenChange={setIsConfirmDialogOpen}
           onConfirm={handleDelete}
         />
+        <NotificationDialog
+  isOpen={isViewDialogOpen}
+  onOpenChange={setIsViewDialogOpen}
+  notification={selectedNotification}
+/>
+
       </div>
     </>
   );

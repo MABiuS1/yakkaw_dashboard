@@ -1,8 +1,10 @@
 export type Notification = {
     id: string | null;
     title: string;
+    time?: string;
     message: string;
     icon: string;
+    
   }
 
 export type FormDialogProps = {
@@ -26,12 +28,8 @@ export type FormDialogProps = {
   }
 
 export type NotificationCardProps = {
-    notification: {
-      id: string | null;
-      title: string;
-      message: string;
-      icon: string;
-    };
+    notification: Notification;
     onEdit: () => void;
     onDelete: () => void;
+    onView: () => void;
   }

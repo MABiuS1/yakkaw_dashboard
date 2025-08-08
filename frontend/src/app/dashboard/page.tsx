@@ -40,10 +40,10 @@ import DashNewsCard from "@/components/ui/DashNewsCard";
 import DashCategoryCard from "@/components/ui/DashCategoryCard";
 
 const DashboardPage: React.FC = () => {
-  const { filteredNotifications, isLoading: loadingNotifications } = useNotifications();
-  const { filteredSponsors, isLoading: loadingSponsors } = useSponsors();
-  const { filteredNews, isLoading: loadingNews } = useNews();
-  const { categories, isLoading: loadingCategories } = useCategories();
+  const { filteredNotifications,} = useNotifications();
+  const { filteredSponsors,} = useSponsors();
+  const { filteredNews,} = useNews();
+  const { categories,} = useCategories();
 
   // Mock data for the charts (replace with real data from your API)
   const notificationTrends = [
@@ -82,17 +82,7 @@ const DashboardPage: React.FC = () => {
     show: { opacity: 1, y: 0 }
   };
 
-  if (loadingNotifications || loadingSponsors || loadingNews || loadingCategories) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-        <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center">
-          <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mb-4" />
-          <p className="text-lg font-medium text-slate-700">Loading dashboard...</p>
-          <p className="text-sm text-slate-500">Please wait while we fetch your data</p>
-        </div>
-      </div>
-    );
-  }
+  
 
   // Calculated metrics
   const todayNotifications = filteredNotifications.length;

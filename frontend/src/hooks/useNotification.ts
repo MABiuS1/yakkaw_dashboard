@@ -1,63 +1,88 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// useNotification.ts
 'use client'
 import { useState, useEffect } from "react";
-import { Notification } from "@/constant/notificationData";
+import type { Notification } from "@/constant/notificationData";
+
+
+type NotificationForm = { title: string; message: string; category: string; icon?: string };
+
+const EMPTY_FORM: NotificationForm = { title: "", message: "", category: "", icon: "" };
+const API = "http://localhost:8080";
 
 export const useNotifications = () => {
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
+
   const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
+
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-const [selectedNotification, setSelectedNotification] = useState(null);
-  const [currentNotification, setCurrentNotification] = useState<Notification>({
-    id: null,
-    title: "",
-    message: "",
-    icon: "",
-  });
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+
+  // 👉 ฟอร์มที่ใช้ใน Dialog (Create/Update)
+  const [currentForm, setCurrentForm] = useState<NotificationForm>(EMPTY_FORM);
+  // 👉 id ที่กำลังแก้ไข (ถ้า null คือโหมด create)
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  
+  
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("http://localhost:8080/me", { credentials: "include" });
-      if (!response.ok) throw new Error("Unauthorized");
-    } catch (err) {
+      const r = await fetch(`${API}/me`, { credentials: "include" });
+      if (!r.ok) throw new Error("Unauthorized");
+    } catch {
       window.location.href = "/login";
     }
   };
 
   const fetchNotifications = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch("http://localhost:8080/notifications", { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch notifications");
-      const data: Notification[] = await response.json();
+      const r = await fetch(`${API}/notifications`, { credentials: "include" });
+      if (!r.ok) throw new Error("Failed to fetch notifications");
+      const data: Notification[] = await r.json();
       setNotifications(data || []);
     } catch (err) {
       setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  // 👉 helper: เปิด dialog แบบถูกวิธี
+  const openCreateDialog = () => {
+    setCurrentForm(EMPTY_FORM);
+    setEditingId(null);
+    setIsCreateDialogOpen(true);
+  };
+
+  const openEditDialog = (n: Notification) => {
+  setEditingId(n.id);
+  setCurrentForm({
+    title: n.title ?? "",
+    message: n.message ?? "",
+    category: n.category ?? "",
+    icon: n.icon ?? "",
+  });
+  setIsEditDialogOpen(true);
+};
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/admin/notifications", {
+      const r = await fetch(`${API}/admin/notifications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(currentNotification),
+        body: JSON.stringify(currentForm), // ส่งเฉพาะ body ฟอร์ม
       });
-      if (!response.ok) throw new Error("Failed to create notification");
+      if (!r.ok) throw new Error("Failed to create notification");
       await fetchNotifications();
       setIsCreateDialogOpen(false);
-      setCurrentNotification({ id: null, title: "", message: "", icon: "" });
+      setCurrentForm(EMPTY_FORM);
     } catch (err) {
       setError((err as Error).message);
     }
@@ -65,18 +90,19 @@ const [selectedNotification, setSelectedNotification] = useState(null);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentNotification.id) return;
+    if (!editingId) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/notifications/${currentNotification.id}`, {
+      const r = await fetch(`${API}/admin/notifications/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(currentNotification),
+        body: JSON.stringify(currentForm),
       });
-      if (!response.ok) throw new Error("Failed to update notification");
+      if (!r.ok) throw new Error("Failed to update notification");
       await fetchNotifications();
       setIsEditDialogOpen(false);
-      setCurrentNotification({ id: null, title: "", message: "", icon: "" });
+      setEditingId(null);
+      setCurrentForm(EMPTY_FORM);
     } catch (err) {
       setError((err as Error).message);
     }
@@ -85,11 +111,11 @@ const [selectedNotification, setSelectedNotification] = useState(null);
   const handleDelete = async () => {
     if (!notificationToDelete) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/notifications/${notificationToDelete}`, {
+      const r = await fetch(`${API}/admin/notifications/${notificationToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });
-      if (!response.ok) throw new Error("Failed to delete notification");
+      if (!r.ok) throw new Error("Failed to delete notification");
       await fetchNotifications();
       setIsConfirmDialogOpen(false);
       setNotificationToDelete(null);
@@ -106,8 +132,8 @@ const [selectedNotification, setSelectedNotification] = useState(null);
   useEffect(() => {
     if (searchQuery) {
       setFilteredNotifications(
-        notifications.filter((notification) =>
-          notification.title.toLowerCase().includes(searchQuery.toLowerCase())
+        notifications.filter((n) =>
+          n.title.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
     } else {
@@ -116,28 +142,59 @@ const [selectedNotification, setSelectedNotification] = useState(null);
   }, [searchQuery, notifications]);
 
   return {
+    // lists
     filteredNotifications,
+    notifications,
+
+    // search
     searchQuery,
     setSearchQuery,
-    notifications,
-    isLoading,
-    error,
+
+    // dialogs
     isEditDialogOpen,
-    setIsEditDialogOpen,
+    setIsEditDialogOpen: (open: boolean) => {
+      if (!open) {
+        setEditingId(null);
+        setCurrentForm(EMPTY_FORM);
+      }
+      setIsEditDialogOpen(open);
+    },
     isCreateDialogOpen,
-    setIsCreateDialogOpen,
+    setIsCreateDialogOpen: (open: boolean) => {
+      if (!open) {
+        setEditingId(null);
+        setCurrentForm(EMPTY_FORM);
+      }
+      setIsCreateDialogOpen(open);
+    },
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
+
+    // helper funcs for main
+    openCreateDialog,
+    openEditDialog,
+
+    // delete
     notificationToDelete,
     setNotificationToDelete,
-    currentNotification,
-    setCurrentNotification,
-    handleCreate,
-    handleUpdate,
     handleDelete,
+
+    // view dialog
     isViewDialogOpen,
     setIsViewDialogOpen,
     selectedNotification,
-    setSelectedNotification
+    setSelectedNotification,
+
+    // form state + editing id
+    currentForm,
+    setCurrentForm,
+    editingId,
+
+    // submit
+    handleCreate,
+    handleUpdate,
+
+    // error
+    error,
   };
 };

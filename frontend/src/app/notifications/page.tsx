@@ -5,37 +5,54 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Search, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Search, Plus } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotification";
 import { NotificationCard } from "@/components/notifications/NotificationCard";
 import { FormDialog } from "@/components/notifications/FormNotificationDialog";
 import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
 import Navbar from "@/components/ui/Navbar";
 import { NotificationDialog } from "@/components/notifications/NotificationDialog";
+import type { Notification } from "@/constant/notificationData";
 
 const NotificationPage: React.FC = () => {
-    const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+
   const {
+    // lists & search
     filteredNotifications,
     searchQuery,
     setSearchQuery,
-    isLoading,
+
+    // errors
     error,
+
+    // dialogs (setters ใน hook จะจัดการ reset form ให้แล้ว)
     isEditDialogOpen,
     setIsEditDialogOpen,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
+
+    // delete
     setNotificationToDelete,
-    currentNotification,
-    setCurrentNotification,
+    handleDelete,
+
+    // form state
+    currentForm,
+    setCurrentForm,
+
+    // submit
     handleCreate,
     handleUpdate,
-    handleDelete,
+
+    // helpers เปิด dialog แบบถูกวิธี (รีเซ็ต/อัดค่าให้อัตโนมัติ)
+    openCreateDialog,
+    openEditDialog,
   } = useNotifications();
 
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -58,21 +75,17 @@ const [selectedNotification, setSelectedNotification] = useState<Notification | 
     },
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin h-12 w-12 text-primary mb-4" />
-        <p className="text-lg text-muted-foreground">
-          Loading notifications...
-        </p>
-      </div>
-    );
-  }
+  const sortedNotifications = [...filteredNotifications].sort((a, b) => {
+    const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+    const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
+    return bTime - aTime; 
+  }).reverse(); 
+
 
   return (
     <>
       <Navbar />
-      <div className="bg-gradient-to-b from-blue-50 to-indigo-50 min-h-screen">
+      <div className="bg-gradient-to-b from-blue-50 to-indigo-50 min-h-screen pt-7 pb-10 px-4 sm:px-6 lg:px-8 ">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -81,16 +94,12 @@ const [selectedNotification, setSelectedNotification] = useState<Notification | 
         >
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-blue-800">
-                Manage Notification
-              </h1>
-              <p className="text-blue-600 mt-1">
-                Manage of Notification for Post, Edit and Delete
-              </p>
+              <h1 className="text-3xl font-bold text-blue-800">Manage Notification</h1>
+              <p className="text-blue-600 mt-1">Manage Notification for Add, Update and Delete</p>
             </div>
             <Button
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-700"
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={openCreateDialog} // ใช้ helper เพื่อรีเซ็ตฟอร์มก่อนเปิด
             >
               <Plus size={16} /> Add Notification
             </Button>
@@ -108,7 +117,7 @@ const [selectedNotification, setSelectedNotification] = useState<Notification | 
                 size={20}
               />
               <Input
-                placeholder="Search Sponsors..."
+                placeholder="Search notifications..."
                 className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-700"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -130,56 +139,59 @@ const [selectedNotification, setSelectedNotification] = useState<Notification | 
               animate="visible"
               className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
             >
-              {filteredNotifications.length === 0 ? (
+              {sortedNotifications.length === 0 ? (
                 <motion.div
-                  variants={itemVariants}
-                  className="text-center p-10 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border border-green-100"
                 >
-                  <h3 className="text-lg font-medium text-blue-700">
-                    No notifications found
+                  <h3 className="text-lg font-medium text-green-700">
+                    No Notification found
                   </h3>
                 </motion.div>
               ) : (
-                filteredNotifications.map((notification) => (
-  <NotificationCard
-    key={notification.id}
-    notification={notification}
-    onEdit={() => {
-      setCurrentNotification(notification);
-      setIsEditDialogOpen(true);
-    }}
-    onDelete={() => {
-      setNotificationToDelete(notification.id);
-      setIsConfirmDialogOpen(true);
-    }}
-    onView={() => {
-      setSelectedNotification(notification);
-      setIsViewDialogOpen(true);
-    }}
-  />
-))
-
+                sortedNotifications.map((notification) => (
+                  <NotificationCard
+                    key={notification.id}
+                    // ส่ง notification เดิมไปเหมือนเดิม
+                    notification={notification}
+                    onEdit={() => {
+                      openEditDialog(notification);
+                      setIsEditDialogOpen(true);
+                    }}
+                    onDelete={() => {
+                      setNotificationToDelete(notification.id as any);
+                      setIsConfirmDialogOpen(true);
+                    }}
+                    onView={() => {
+                      setSelectedNotification(notification);
+                      setIsViewDialogOpen(true);
+                    }}
+                  />
+                ))
               )}
             </motion.div>
           </AnimatePresence>
         </motion.div>
 
+        {/* CREATE */}
         <FormDialog
           isOpen={isCreateDialogOpen}
-          onOpenChange={setIsCreateDialogOpen}
+          onOpenChange={(open) => setIsCreateDialogOpen(open)} // hook จะล้าง form ให้ตอนปิด
           onSubmit={handleCreate}
-          notification={currentNotification}
-          setNotification={setCurrentNotification}
+          form={currentForm}
+          setForm={setCurrentForm}
           title="Create Notification"
-          submitButtonText="CREATE"
+          submitButtonText="Create"
         />
 
+        {/* EDIT */}
         <FormDialog
           isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
+          onOpenChange={(open) => setIsEditDialogOpen(open)} // hook จะล้าง form ให้ตอนปิด
           onSubmit={handleUpdate}
-          notification={currentNotification}
-          setNotification={setCurrentNotification}
+          form={currentForm}
+          setForm={setCurrentForm}
           title="Edit Notification"
           submitButtonText="Update"
         />
@@ -189,12 +201,12 @@ const [selectedNotification, setSelectedNotification] = useState<Notification | 
           onOpenChange={setIsConfirmDialogOpen}
           onConfirm={handleDelete}
         />
-        <NotificationDialog
-  isOpen={isViewDialogOpen}
-  onOpenChange={setIsViewDialogOpen}
-  notification={selectedNotification}
-/>
 
+        <NotificationDialog
+          isOpen={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          notification={selectedNotification}
+        />
       </div>
     </>
   );

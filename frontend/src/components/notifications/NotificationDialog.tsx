@@ -15,16 +15,14 @@ export const NotificationDialog: React.FC<Props> = ({ isOpen, onOpenChange, noti
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="border-blue-100 max-w-4xl max-h-screen h-[90vh] overflow-hidden"
-      >
+      <DialogContent className="border-blue-100 max-w-4xl max-h-screen h-[90vh] overflow-hidden">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onOpenChange(false)}
           className="absolute top-4 right-4 text-red-500 hover:text-red-700 z-10"
         >
-          <X className="text-2xl"/>
+          <X className="text-2xl" />
         </Button>
 
         <div className="flex flex-col gap-4 pr-2 max-h-[75vh]">
@@ -33,16 +31,23 @@ export const NotificationDialog: React.FC<Props> = ({ isOpen, onOpenChange, noti
             <p className="text-xs text-blue-500 mt-1">{notification.time}</p>
           </DialogHeader>
 
-          <div className="flex flex-col overflow-y-auto md:flex-row gap-4 items-start">
+          {/* เนื้อหา: รูปลอยซ้าย + ข้อความล้อมรูป */}
+          <div className="overflow-y-auto md:after:content-[''] md:after:block md:after:clear-both">
             {notification.icon && (
               <motion.img
                 src={notification.icon}
                 alt={notification.title}
-                className="w-full md:w-[300px] h-auto object-contain rounded shadow-md"
+                className="
+                  w-full h-auto object-cover rounded shadow-md
+                  md:float-left md:w-80 md:max-w-[40%] md:mr-6 md:mb-4
+                "
+                whileHover={{ scale: 1.01 }}
+                transition={{ duration: 0.2 }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             )}
 
-            <div className="text-blue-900 whitespace-pre-wrap">
+            <div className="text-blue-900 whitespace-pre-wrap leading-relaxed">
               {notification.message}
             </div>
           </div>

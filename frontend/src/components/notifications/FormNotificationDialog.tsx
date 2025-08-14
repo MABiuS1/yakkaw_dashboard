@@ -54,6 +54,9 @@ export const FormDialog: React.FC<FormDialogProps> = ({
           onSubmit={onSubmit}
           className={fullScreen ? "flex flex-col gap-4 h-[calc(100dvh-160px)]" : "space-y-4"}
         >
+          <div className="flex items-center justify-between">
+            <label className="text-sm text-blue-700">Title</label>
+          </div>
           <Input
             placeholder="Title"
             value={form.title}
@@ -89,18 +92,23 @@ export const FormDialog: React.FC<FormDialogProps> = ({
               rows={fullScreen ? 18 : 4}
             />
           </div>
-
+          <div className="flex items-center justify-between">
+            <label className="text-sm text-blue-700">Category</label>
+          </div>
           <Input
             placeholder="Category"
             value={form.category}
             onChange={(e) => setForm(s => ({ ...s, category: e.target.value }))}
             required
           />
-
+          <div className="flex items-center justify-between">
+            <label className="text-sm text-blue-700">Image URL</label>
+          </div>
           <Input
-            placeholder="Image URL (optional)"
+            placeholder="Image URL "
             value={form.icon ?? ""}
             onChange={(e) => setForm(s => ({ ...s, icon: e.target.value }))}
+            required
           />
 
           {/* Footer: โหมดเต็มจอเพิ่มพื้นที่โล่ง */}

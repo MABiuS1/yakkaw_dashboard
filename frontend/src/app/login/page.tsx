@@ -196,14 +196,15 @@ const LoginPage: React.FC = () => {
                 />
                 <Label htmlFor="rememberMe">Remember me</Label>
               </div>
-              <Button
+              
+              {/* <Button
                 type="button"
                 variant="link"
                 className="text-white hover:underline"
                 onClick={() => router.push("/forgot-password")}
               >
                 Forgot password?
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
 

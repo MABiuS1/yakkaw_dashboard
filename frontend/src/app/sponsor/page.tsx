@@ -5,29 +5,50 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Search, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Search, Plus } from "lucide-react";
+
 import { useSponsors } from "@/hooks/useSponsor";
-import { SponsorsCard } from "@/components/ui/SponsorsCard";
-import { FormDialog } from "@/components/ui/FormSponsorDialog";
+import { SponsorsCard } from "@/components/sponsors/SponsorsCard";
+import { SponsorFormDialog } from "@/components/sponsors/FormSponsorDialog";
 import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
+import { SponsorDialog } from "@/components/sponsors/SponsorDialog";
+
 import Navbar from "@/components/ui/Navbar";
 
 const SponsorsPage: React.FC = () => {
   const {
+    // data
+    sponsors,
     filteredSponsors,
+    error,
+
+    // search
     searchQuery,
     setSearchQuery,
-    isLoading,
-    error,
+
+    // dialogs
     isEditDialogOpen,
     setIsEditDialogOpen,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
+
+    // delete
+    sponsorsToDelete,
     setSponsorsToDelete,
+
+    // view dialog
+    isViewDialogOpen,
+    setIsViewDialogOpen,
+    selectedSponsor,
+    setSelectedSponsor,
+
+    // form/editing
     currentSponsor,
-    setCurrentSponsors,
+    setCurrentSponsor,
+    openCreateDialog,
+    openEditDialog,
     handleCreate,
     handleUpdate,
     handleDelete,
@@ -55,42 +76,37 @@ const SponsorsPage: React.FC = () => {
     },
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin h-12 w-12 text-primary mb-4" />
-        <p className="text-lg text-muted-foreground">Loading Sponsors...</p>
-      </div>
-    );
-  }
+  const sortedSponsors = [...filteredSponsors]
+    .sort((a, b) => {
+      const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+      const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
+      return bTime - aTime;
+    });
 
   return (
     <>
-      <Navbar/>
-      <div className="bg-gradient-to-b from-amber-50 to-yellow-50 min-h-screen">
+      <Navbar />
+      <div className="bg-gradient-to-b from-amber-50 to-indigo-50 min-h-screen pt-7 pb-10 px-4 sm:px-6 lg:px-8 ">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="p-6 max-w-7xl mx-auto"
+          className="max-w-7xl mx-auto"
         >
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-amber-800">
-                Manage Sponsors
-              </h1>
-              <p className="text-amber-600 mt-1">
-                Manage of Sponsors for Post, Edit and Delete
-              </p>
+              <h1 className="text-3xl font-bold text-amber-800">Manage Sponsors</h1>
+              <p className="text-amber-600 mt-1">Add, update, and delete sponsors</p>
             </div>
             <Button
               className="flex items-center gap-2 bg-amber-500 hover:bg-amber-700"
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={openCreateDialog}
             >
-              <Plus size={16} /> Add Sponsors
+              <Plus size={16} /> Add Sponsor
             </Button>
           </div>
 
+          {/* Search */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -99,11 +115,11 @@ const SponsorsPage: React.FC = () => {
           >
             <div className="rounded-xl md:col-span-6 relative shadow-md ">
               <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-300 "
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400 "
                 size={20}
               />
               <Input
-                placeholder="Search Sponsors..."
+                placeholder="Search sponsors..."
                 className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-700"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -111,6 +127,7 @@ const SponsorsPage: React.FC = () => {
             </div>
           </motion.div>
 
+          {/* Error */}
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -118,6 +135,7 @@ const SponsorsPage: React.FC = () => {
             </Alert>
           )}
 
+          {/* Sponsor List */}
           <AnimatePresence>
             <motion.div
               variants={containerVariants}
@@ -125,59 +143,75 @@ const SponsorsPage: React.FC = () => {
               animate="visible"
               className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
             >
-              {filteredSponsors.length === 0 ? (
+              {sortedSponsors.length === 0 ? (
                 <motion.div
-                  variants={itemVariants}
-                  className="text-center p-10 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border border-amber-100"
                 >
                   <h3 className="text-lg font-medium text-amber-700">
-                    No Sponsors found
+                    No sponsor found
                   </h3>
                 </motion.div>
               ) : (
-                filteredSponsors.map((Sponsor) => (
-                  <SponsorsCard
-                    key={Sponsor.id}
-                    Sponsors={Sponsor}
-                    onEdit={() => {
-                      setCurrentSponsors(Sponsor);
-                      setIsEditDialogOpen(true);
-                    }}
-                    onDelete={() => {
-                      setSponsorsToDelete(Sponsor.id);
-                      setIsConfirmDialogOpen(true);
-                    }}
-                  />
+                sortedSponsors.map((sponsor) => (
+                  <motion.div key={sponsor.id} variants={itemVariants} exit="exit">
+                    <SponsorsCard
+                      sponsor={sponsor}
+                      onEdit={() => {
+                        openEditDialog(sponsor);
+                        setIsEditDialogOpen(true);
+                      }}
+                      onDelete={() => {
+                        setSponsorsToDelete(sponsor.id);
+                        setIsConfirmDialogOpen(true);
+                      }}
+                      onView={() => {
+                        setSelectedSponsor(sponsor);
+                        setIsViewDialogOpen(true);
+                      }}
+                    />
+                  </motion.div>
                 ))
               )}
             </motion.div>
           </AnimatePresence>
         </motion.div>
 
-        <FormDialog
+        {/* CREATE */}
+        <SponsorFormDialog
           isOpen={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
           onSubmit={handleCreate}
-          Sponsors={currentSponsor}
-          setSponsors={setCurrentSponsors}
-          name="Create Notification"
-          submitButtonText="CREATE"
+          form={currentSponsor}
+          setForm={setCurrentSponsor}
+          title="Create Sponsor"
+          submitButtonText="Create"
         />
 
-        <FormDialog
+        {/* EDIT */}
+        <SponsorFormDialog
           isOpen={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onSubmit={handleUpdate}
-          Sponsors={currentSponsor}
-          setSponsors={setCurrentSponsors}
-          name="Edit Notification"
+          form={currentSponsor}
+          setForm={setCurrentSponsor}
+          title="Edit Sponsor"
           submitButtonText="Update"
         />
 
+        {/* DELETE CONFIRM */}
         <ConfirmDeleteDialog
           isOpen={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}
           onConfirm={handleDelete}
+        />
+
+        {/* VIEW */}
+        <SponsorDialog
+          isOpen={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          sponsor={selectedSponsor}
         />
       </div>
     </>

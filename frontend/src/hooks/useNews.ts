@@ -1,133 +1,170 @@
-'use client'
-import { useState, useEffect } from "react";
-import { News, Category } from "@/constant/newsData";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import type { News, NewsForm } from "@/constant/newsData";
+import type { Category } from "@/constant/categoryData";
+
+const API = "http://localhost:8080";
+
+const EMPTY_FORM: NewsForm = {
+  title: "",
+  description: "",
+  image: "",
+  url: "",
+  date: "",          // ถ้าเว้นว่าง จะตั้งเป็นตอนส่งให้เป็น now()
+  category_id: 0,
+};
 
 export const useNews = () => {
-  const [categories, setCategories] = useState<Category[]>([]); // ✅ เก็บรายการหมวดหมู่
+  // data
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [news, setNews] = useState<News[]>([]);
   const [filteredNews, setFilteredNews] = useState<News[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [news, setNews] = useState<News[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // ui/state
+ 
   const [error, setError] = useState<string>("");
+
+  // dialogs
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
-  const [newsToDelete, setNewsToDelete] = useState<string | null>(null);
-  const [currentNews, setCurrentNews] = useState<News>({
-    id: null,
-    title: "",
-    description: "",
-    image: "",
-    url: "",
-    date: "",
-    category_id: "",
-  });
 
-  // ✅ ฟังก์ชันดึง Categories จาก API
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/categories");
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      const data = await response.json();
-      setCategories(data || []);
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
+  // deletion
+  const [newsToDelete, setNewsToDelete] = useState<number | null>(null);
 
-  const checkAuth = async () => {
+  // form/editing
+  const [currentForm, setCurrentForm] = useState<NewsForm>(EMPTY_FORM);
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  // auth (ถ้าจำเป็น)
+  const checkAuth = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:8080/me", { credentials: "include" });
-      if (!response.ok) throw new Error("Unauthorized");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
+      const res = await fetch(`${API}/me`, { credentials: "include" });
+      if (!res.ok) throw new Error("Unauthorized");
+    } catch {
       window.location.href = "/login";
     }
-  };
+  }, []);
 
-  const fetchNews = async () => {
+  // fetch categories
+  const fetchCategories = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch("http://localhost:8080/news", { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch news");
-      const data = await response.json();
-      setNews(data || []);
+      const res = await fetch(`${API}/categories`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch categories");
+      const data: Category[] = await res.json();
+      setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
       setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
     }
+  }, []);
+
+  // fetch news
+  const fetchNews = useCallback(async () => {
+    try {
+      
+      setError("");
+      const res = await fetch(`${API}/news`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch news");
+      const data: News[] = await res.json();
+      setNews(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }, []);
+
+  // helpers: open dialogs
+  const openCreateDialog = () => {
+    setCurrentForm(EMPTY_FORM);
+    setEditingId(null);
+    setIsCreateDialogOpen(true);
   };
 
-  // ✅ ฟังก์ชันสร้างข่าวใหม่
+  const openEditDialog = (n: News) => {
+    setEditingId(n.id);
+    setCurrentForm({
+      title: n.title ?? "",
+      description: n.description ?? "",
+      image: n.image ?? "",
+      url: n.url ?? "",
+      date: n.date ?? "",
+      category_id: n.category_id ?? 0,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  // CRUD
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sending News Data:", currentNews); // ✅ Debug ดูค่าข้อมูลที่ส่ง
-  
     try {
-      const response = await fetch("http://localhost:8080/admin/news", {
+      const payload: NewsForm = {
+        ...currentForm,
+        category_id: Number(currentForm.category_id) || 0,
+        date: currentForm.date && currentForm.date.trim() !== "" ? currentForm.date : new Date().toISOString(),
+      };
+
+      const res = await fetch(`${API}/admin/news`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          ...currentNews,
-          category_id: Number(currentNews.category_id), // ✅ แปลง category_id เป็น number
-          date: currentNews.date ? currentNews.date : new Date().toISOString(), // ✅ ตั้งค่า date เป็นปัจจุบันถ้าว่าง
-        }),
+        body: JSON.stringify(payload),
       });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to create news:", errorText);
-        throw new Error("Failed to create news: " + errorText);
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to create news: ${text}`);
       }
-  
+
       await fetchNews();
       setIsCreateDialogOpen(false);
-      setCurrentNews({ id: null, title: "", description: "", image: "", url: "", date: "", category_id: "" });
+      setCurrentForm(EMPTY_FORM);
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
-  // ✅ ฟังก์ชันแก้ไขข่าว
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentNews.id) return;
-  
+    if (editingId == null) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/news/${currentNews.id}`, {
+      const payload: NewsForm = {
+        ...currentForm,
+        category_id: Number(currentForm.category_id) || 0,
+        date: currentForm.date && currentForm.date.trim() !== "" ? currentForm.date : new Date().toISOString(),
+      };
+
+      const res = await fetch(`${API}/admin/news/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          ...currentNews,
-          category_id: Number(currentNews.category_id), // ✅ แปลง category_id เป็น number
-          date: currentNews.date ? currentNews.date : new Date().toISOString(), // ✅ ตั้งค่า date เป็นปัจจุบันถ้าว่าง
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to update news");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to update news: ${text}`);
+      }
 
       await fetchNews();
       setIsEditDialogOpen(false);
-      setCurrentNews({ id: null, title: "", description: "", image: "", url: "", date: "", category_id: "" });
+      setCurrentForm(EMPTY_FORM);
+      setEditingId(null);
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
-  // ✅ ฟังก์ชันลบข่าว
   const handleDelete = async () => {
-    if (!newsToDelete) return;
-
+    if (newsToDelete == null) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/news/${newsToDelete}`, {
+      const res = await fetch(`${API}/admin/news/${newsToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });
 
-      if (!response.ok) throw new Error("Failed to delete news");
+      if (!res.ok) throw new Error("Failed to delete news");
 
       await fetchNews();
       setIsConfirmDialogOpen(false);
@@ -137,45 +174,78 @@ export const useNews = () => {
     }
   };
 
+  // effects
   useEffect(() => {
     checkAuth();
-    fetchCategories(); // ✅ โหลด Categories ตอนเริ่มต้น
+    fetchCategories();
     fetchNews();
-  }, []);
+  }, [checkAuth, fetchCategories, fetchNews]);
 
   useEffect(() => {
-    if (searchQuery) {
-      setFilteredNews(
-        news.filter((item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
-    } else {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
       setFilteredNews(news);
+      return;
     }
+    setFilteredNews(
+      news.filter((n) =>
+        (n.title ?? "").toLowerCase().includes(q) ||
+        (n.description ?? "").toLowerCase().includes(q) ||
+        (n.url ?? "").toLowerCase().includes(q)
+      )
+    );
   }, [searchQuery, news]);
 
+  // optional: sort by date desc (ใหม่→เก่า)
+  useEffect(() => {
+    setFilteredNews((prev) =>
+      [...prev].sort((a, b) => {
+        const at = new Date(a.date ?? 0).getTime();
+        const bt = new Date(b.date ?? 0).getTime();
+        return bt - at;
+      })
+    );
+  }, [news]);
+
   return {
-    categories, // ✅ ส่ง categories ออกไปใช้ในหน้า Form
+    // data
+    categories,
+    news,
     filteredNews,
+
+    // search
     searchQuery,
     setSearchQuery,
-    news,
-    isLoading,
+
+    // state
     error,
+
+    // dialogs
     isEditDialogOpen,
     setIsEditDialogOpen,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
+
+    // delete
     newsToDelete,
     setNewsToDelete,
-    currentNews,
-    setCurrentNews,
+
+    // form/edit
+    currentForm,
+    setCurrentForm,
+    editingId,
+    openCreateDialog,
+    openEditDialog,
+
+    // actions
     handleCreate,
-    handleUpdate, // ✅ เพิ่มฟังก์ชันแก้ไขข่าว
-    handleDelete, // ✅ เพิ่มฟังก์ชันลบข่าว
-    fetchCategories, // ✅ ให้เรียก fetchCategories ได้จากภายนอก
+    handleUpdate,
+    handleDelete,
+
+    // util
+    fetchCategories,
+    fetchNews,
   };
 };

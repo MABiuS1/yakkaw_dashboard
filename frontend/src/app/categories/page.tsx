@@ -4,67 +4,78 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Loader2, Plus, Search } from "lucide-react";
+
 import { useCategories } from "@/hooks/useCategories";
-import { CategoryCard } from "@/components/ui/CategoryCard";
-import { FormDialog } from "@/components/ui/FormCategoryDialog";
+import { CategoryCard } from "@/components/categories/CategoryCard"; // ใช้ชื่อเดิม แต่ภายในจะเป็น list-row
+import { FormDialog } from "@/components/categories/FormCategoryDialog";
+import { Input } from "@/components/ui/input";
 import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
 import Navbar from "@/components/ui/Navbar";
 
 const CategoryPage: React.FC = () => {
   const {
-    categories,
-    isLoading,
+    // data
+    filteredCategories,
+
     error,
+
+    // search
+    searchQuery,
+    setSearchQuery,
+
+    // dialogs
     isEditDialogOpen,
     setIsEditDialogOpen,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
+
+    // deletion
     setCategoryToDelete,
-    currentCategory,
-    setCurrentCategory,
+
+    // form/edit
+    currentForm,
+    setCurrentForm,
+    openCreateDialog,
+    openEditDialog,
+
+    // actions
     handleCreate,
     handleUpdate,
     handleDelete,
   } = useCategories();
 
-  
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin h-12 w-12 text-primary mb-4" />
-        <p className="text-lg text-muted-foreground">Loading Categories...</p>
-      </div>
-    );
-  }
 
   return (
     <>
       <Navbar />
       <div className="bg-gradient-to-b from-emerald-50 to-green-50 min-h-screen">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="p-6 max-w-7xl mx-auto"
-        >
+        <div className="p-6 max-w-7xl mx-auto">
+          {/* Header */}
           <div className="flex justify-between items-center mb-6">
-           <div>
-            <h1 className="text-3xl font-bold text-emerald-800">Manage Categories</h1>
-            <p className="text-emerald-600 mt-1">
-                Manage Categories for Post, Edit and Delete
-              </p>
-              </div>
-            <Button
-              className="bg-emerald-500 hover:bg-emerald-700"
-              onClick={() => setIsCreateDialogOpen(true)}
-            >
+            <div>
+              <h1 className="text-3xl font-bold text-emerald-700">Manage Categories</h1>
+              <p className="text-emerald-600 mt-1">Manage Categories for Post, Edit and Delete</p>
+            </div>
+            <Button className="bg-emerald-500 hover:bg-emerald-700" onClick={openCreateDialog}>
               <Plus size={16} /> Add Category
             </Button>
           </div>
 
+          {/* Search */}
+          <div className="mb-6 max-w-xl relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" size={18} />
+            <Input
+              placeholder="Search categories..."
+              className="pl-9 bg-white py-5 rounded-xl shadow-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Error */}
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -72,58 +83,61 @@ const CategoryPage: React.FC = () => {
             </Alert>
           )}
 
-          <AnimatePresence>
-            <motion.div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {categories.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border border-green-100"
-                >
-                  <h3 className="text-lg font-medium text-green-700">
-                    No Categories found
-                  </h3>
-                </motion.div>
-              ) : (
-                categories.map((category) => (
-                  <CategoryCard
-                    key={category.id}
-                    category={category}
-                    onEdit={() => {
-                      setCurrentCategory(category);
-                      setIsEditDialogOpen(true);
-                    }}
-                    onDelete={() => {
-                      setCategoryToDelete(category.id);
-                      setIsConfirmDialogOpen(true);
-                    }}
-                  />
-                ))
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
+          {/* List container */}
+          <div className="bg-white rounded-lg border border-emerald-00 shadow-sm overflow-hidden">
+            {/* Header row (optional) */}
+            <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 py-3 bg-emerald-600 border-b border-emerald-100 text-white text-sm">
+              <div className="md:col-span-8">Name</div>
+              <div className="md:col-span-2">ID</div>
+              <div className="md:col-span-2 text-right">Actions</div>
+            </div>
 
+            {/* Rows */}
+            <AnimatePresence initial={false}>
+              {filteredCategories.length === 0 ? (
+                <div className="p-8 text-center text-emerald-700">No categories found</div>
+              ) : (
+                <ul className="divide-y divide-emerald-100">
+                  {filteredCategories.map((category) => (
+                    <CategoryCard
+                      key={category.id}
+                      category={category}
+                      onEdit={() => openEditDialog(category)}
+                      onDelete={() => {
+                        setCategoryToDelete(category.id);
+                        setIsConfirmDialogOpen(true);
+                      }}
+                    />
+                  ))}
+                </ul>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* CREATE */}
         <FormDialog
           isOpen={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
           onSubmit={handleCreate}
-          category={currentCategory}
-          setCategory={setCurrentCategory}
+          form={currentForm}
+          setForm={setCurrentForm}
           title="Create Category"
           submitButtonText="CREATE"
         />
 
+        {/* EDIT */}
         <FormDialog
           isOpen={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onSubmit={handleUpdate}
-          category={currentCategory}
-          setCategory={setCurrentCategory}
+          form={currentForm}
+          setForm={setCurrentForm}
           title="Edit Category"
           submitButtonText="UPDATE"
         />
 
+        {/* DELETE CONFIRM */}
         <ConfirmDeleteDialog
           isOpen={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}

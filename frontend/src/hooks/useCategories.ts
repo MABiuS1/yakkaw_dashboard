@@ -1,50 +1,73 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
-import { Category } from "@/constant/categoryData";
+import { useEffect, useState, useCallback } from "react";
+import type { Category, CategoryForm } from "@/constant/categoryData";
+
+const API = "http://localhost:8080";
 
 export const useCategories = () => {
+  // data
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // ui/state
   const [error, setError] = useState<string>("");
+
+  // dialogs
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-  const [currentCategory, setCurrentCategory] = useState<Category>({
-    id: null,
-    name: "",
-  });
 
-  const fetchCategories = async () => {
+  // deletion
+  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+
+  // form/editing
+  const [currentForm, setCurrentForm] = useState<CategoryForm>({ name: "" });
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  // fetch
+  const fetchCategories = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch("http://localhost:8080/categories");
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      const data = await response.json();
-      setCategories(data || []);
+
+      setError("");
+      const res = await fetch(`${API}/categories`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch categories");
+      const data: Category[] = await res.json();
+      setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
       setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
     }
+  }, []);
+
+  // helpers
+  const openCreateDialog = () => {
+    setCurrentForm({ name: "" });
+    setEditingId(null);
+    setIsCreateDialogOpen(true);
   };
 
+  const openEditDialog = (cat: Category) => {
+    setEditingId(cat.id);
+    setCurrentForm({ name: cat.name });
+    setIsEditDialogOpen(true);
+  };
+
+  // CRUD
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/admin/categories", {
+      const res = await fetch(`${API}/admin/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(currentCategory),
+        body: JSON.stringify(currentForm),
       });
-
-      if (!response.ok) throw new Error("Failed to create category");
-
+      if (!res.ok) throw new Error("Failed to create category");
       await fetchCategories();
       setIsCreateDialogOpen(false);
-      setCurrentCategory({ id: null, name: "" });
+      setCurrentForm({ name: "" });
     } catch (err) {
       setError((err as Error).message);
     }
@@ -52,35 +75,32 @@ export const useCategories = () => {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentCategory.id) return;
+    if (editingId == null) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/categories/${currentCategory.id}`, {
+      const res = await fetch(`${API}/admin/categories/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(currentCategory),
+        body: JSON.stringify(currentForm),
       });
-
-      if (!response.ok) throw new Error("Failed to update category");
-
+      if (!res.ok) throw new Error("Failed to update category");
       await fetchCategories();
       setIsEditDialogOpen(false);
-      setCurrentCategory({ id: null, name: "" });
+      setCurrentForm({ name: "" });
+      setEditingId(null);
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
   const handleDelete = async () => {
-    if (!categoryToDelete) return;
+    if (categoryToDelete == null) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/categories/${categoryToDelete}`, {
+      const res = await fetch(`${API}/admin/categories/${categoryToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });
-
-      if (!response.ok) throw new Error("Failed to delete category");
-
+      if (!res.ok) throw new Error("Failed to delete category");
       await fetchCategories();
       setIsConfirmDialogOpen(false);
       setCategoryToDelete(null);
@@ -89,24 +109,54 @@ export const useCategories = () => {
     }
   };
 
+  // effects
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setFilteredCategories(categories);
+      return;
+    }
+    setFilteredCategories(
+      categories.filter((c) => (c.name ?? "").toLowerCase().includes(q))
+    );
+  }, [categories, searchQuery]);
 
   return {
+    // data
     categories,
-    isLoading,
+    filteredCategories,
+
+    // search
+    searchQuery,
+    setSearchQuery,
+
+    // state
     error,
+
+    // dialogs
     isEditDialogOpen,
     setIsEditDialogOpen,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
+
+    // delete
     categoryToDelete,
     setCategoryToDelete,
-    currentCategory,
-    setCurrentCategory,
+
+    // form/edit
+    currentForm,
+    setCurrentForm,
+    editingId,
+    openCreateDialog,
+    openEditDialog,
+
+    // actions
     handleCreate,
     handleUpdate,
     handleDelete,

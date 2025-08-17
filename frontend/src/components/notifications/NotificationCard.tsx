@@ -25,7 +25,9 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ notification
         <div className="flex items-center gap-3">
           <CardTitle className="text-lg font-medium text-blue-800">
             {notification.title}
-            <p className="text-xs text-blue-500 mt-2">{notification.time}</p>
+            <p className="text-xs text-blue-400 -mt-1">{notification.category}</p>
+             <p className="text-xs text-blue-500 mt-2">{notification.time}</p>
+            
           </CardTitle>
         </div>
 

@@ -1,10 +1,8 @@
 // useNotification.ts
 'use client'
 import { useState, useEffect } from "react";
-import type { Notification } from "@/constant/notificationData";
+import type { Notification, NotificationForm } from "@/constant/notificationData";
 
-
-type NotificationForm = { title: string; message: string; category: string; icon?: string };
 
 const EMPTY_FORM: NotificationForm = { title: "", message: "", category: "", icon: "" };
 const API = "http://localhost:8080";

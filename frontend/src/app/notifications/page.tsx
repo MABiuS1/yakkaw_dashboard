@@ -6,14 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Search, Plus } from "lucide-react";
+
 import { useNotifications } from "@/hooks/useNotification";
 import { NotificationCard } from "@/components/notifications/NotificationCard";
 import { FormDialog } from "@/components/notifications/FormNotificationDialog";
 import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
-import Navbar from "@/components/ui/Navbar";
 import { NotificationDialog } from "@/components/notifications/NotificationDialog";
 import type { Notification } from "@/constant/notificationData";
 
+import Navbar from "@/components/ui/Navbar";
 const NotificationPage: React.FC = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);

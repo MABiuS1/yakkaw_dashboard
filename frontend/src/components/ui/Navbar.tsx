@@ -3,26 +3,12 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, Bell, LogOut, Home, Gift, Newspaper, FolderOpen } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Menu, LogOut, Home, Bell, Gift, Newspaper, FolderOpen } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
-// Function to get cookie value
 const getCookie = (name: string) => {
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
   return match ? decodeURIComponent(match[2]) : null;
@@ -43,10 +29,7 @@ const DESKTOP_LINKS: NavItem[] = [
   { href: "/DevicePage", icon: FolderOpen, label: "DevicePage" },
 ];
 
-const MOBILE_LINKS: NavItem[] = [
-  { href: "/dashboard", icon: Home, label: "Dashboard" },
-  ...DESKTOP_LINKS,
-];
+const MOBILE_LINKS: NavItem[] = [{ href: "/dashboard", icon: Home, label: "Dashboard" }, ...DESKTOP_LINKS];
 
 const Navbar = () => {
   const [username, setUsername] = useState("");
@@ -71,33 +54,28 @@ const Navbar = () => {
     }
   };
 
-  const isActive = (href: string) =>
-    href === "/"
-      ? pathname === "/"
-      : pathname?.startsWith(href);
+  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname?.startsWith(href));
 
   const DesktopNav = () => (
-    <nav
-      className="hidden lg:flex items-center flex-wrap gap-1 xl:gap-2"
-      aria-label="Primary"
-    >
+    <nav className="hidden lg:flex items-center gap-1 xl:gap-2" aria-label="Primary">
       {DESKTOP_LINKS.map((link) => {
         const Icon = link.icon;
         const active = isActive(link.href);
         return (
           <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}>
             <motion.div
-              whileHover={{ scale: 1.04 }}
+              whileHover={{ y: -1 }}
               whileTap={{ scale: 0.98 }}
               className={[
-                "flex items-center px-3 xl:px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                "relative flex items-center px-3 xl:px-4 py-2 text-sm font-medium rounded-lg transition-colors",
                 active
-                  ? "bg-slate-900 text-white"
+                  ? "bg-rose-500 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
               ].join(" ")}
             >
-              <Icon className="h-5 w-5 mr-2.5 opacity-80" />
+              <Icon className="h-5 w-5 mr-2.5 opacity-90" />
               {link.label}
+              {active && <span className="absolute -bottom-1 left-2 right-2 h-0.5 rounded bg-rose-500/90" />}
             </motion.div>
           </Link>
         );
@@ -134,16 +112,16 @@ const Navbar = () => {
               return (
                 <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}>
                   <motion.div
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ x: 2 }}
                     whileTap={{ scale: 0.98 }}
                     className={[
                       "flex items-center px-4 py-2.5 my-1 text-sm font-medium rounded-lg transition-colors",
                       active
-                        ? "bg-slate-900 text-white"
+                        ? "bg-rose-600 text-white"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
                     ].join(" ")}
                   >
-                    <Icon className="h-5 w-5 mr-2.5 opacity-80" />
+                    <Icon className="h-5 w-5 mr-2.5 opacity-90" />
                     <span>{link.label}</span>
                   </motion.div>
                 </Link>
@@ -152,10 +130,10 @@ const Navbar = () => {
           </div>
         </div>
 
-        <div className="mt-auto flex items-center gap-4">
-          <Avatar className="h-10 w-10">
+        <div className="mt-auto flex items-center gap-4 border-t pt-4">
+          <Avatar className="h-10 w-10 ring-1 ring-rose-200">
             <AvatarImage src="/placeholder-avatar.jpg" alt={username} />
-            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+            <AvatarFallback className="bg-gradient-to-br from-rose-500 to-rose-700 text-white">
               {username.charAt(0)}
             </AvatarFallback>
           </Avatar>
@@ -173,6 +151,8 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/70 shadow-lg overflow-x-clip">
+      {/* top accent bar — เปลี่ยนเป็นโทน rose */}
+      <div className="pointer-events-none h-[3px] bg-gradient-to-r from-transparent via-rose-500/80 to-transparent" />
       <div className="container max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -182,8 +162,10 @@ const Navbar = () => {
                 src="/assets/yakkaw_icon.png"
                 alt="LOGO"
                 className="rounded-full object-contain"
-                width={100}
-                height={44}
+                width={90}
+                height={40}
+                whileHover={{ rotate: 2, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 260, damping: 18 }}
               />
             </Link>
           </div>
@@ -191,17 +173,26 @@ const Navbar = () => {
           {/* Desktop Nav (≥ lg) */}
           <DesktopNav />
 
-          {/* Right side */}
+          {/* Right side: pill โปรไฟล์ โทน rose */}
           <div className="flex items-center gap-2">
-            {/* Logout (≥ lg) */}
-            <div className="hidden lg:block">
-              <Button variant="destructive" size="icon" onClick={handleLogout} aria-label="Logout">
+            <div className="hidden lg:flex items-center gap-2 rounded-full border border-rose-200 bg-white/70 pl-3 pr-1 py-1 shadow-sm">
+              <span className="text-sm font-medium text-slate-700 max-w-[160px] truncate">{username}</span>
+              <span className="mx-1 h-5 w-px bg-rose-200" />
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={handleLogout}
+                aria-label="Logout"
+                className="shadow-xs rounded-full hover:shadow"
+              >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Mobile / Tablet Sheet (≤ md + md-to-lg) */}
-            <MobileNavSheet />
+            {/* Mobile / Tablet */}
+            <div className="lg:hidden">
+              <MobileNavSheet />
+            </div>
           </div>
         </div>
       </div>

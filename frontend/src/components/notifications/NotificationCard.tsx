@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { NotificationCardProps } from "@/constant/notificationData";
 
-export const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onEdit, onDelete, onView }) => {
+export const NotificationCard= ({ notification, onEdit, onDelete, onView }:NotificationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => setIsExpanded(!isExpanded);

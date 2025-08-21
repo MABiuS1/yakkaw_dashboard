@@ -16,9 +16,9 @@ export type FormDialogProps = {
 
 const MAX_MESSAGE = 2000;
 
-export const FormDialog: React.FC<FormDialogProps> = ({
+export const FormDialog = ({
   isOpen, onOpenChange, onSubmit, form, setForm, title, submitButtonText,
-}) => {
+}: FormDialogProps) => {
   const [fullScreen, setFullScreen] = React.useState(false);
   const remaining = MAX_MESSAGE - form.message.length;
 

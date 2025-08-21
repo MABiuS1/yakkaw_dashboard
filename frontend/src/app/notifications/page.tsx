@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,42 +15,26 @@ import { NotificationDialog } from "@/components/notifications/NotificationDialo
 import type { Notification } from "@/constant/notificationData";
 
 import Navbar from "@/components/ui/Navbar";
-const NotificationPage: React.FC = () => {
+import { CardSkeleton } from "@/components/ui/CardSkeleton";
+
+function NotificationPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
-  const {
-    // lists & search
+ const {
     filteredNotifications,
-    searchQuery,
-    setSearchQuery,
-
-    // errors
     error,
-
-    // dialogs (setters ใน hook จะจัดการ reset form ให้แล้ว)
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isCreateDialogOpen,
-    setIsCreateDialogOpen,
-    isConfirmDialogOpen,
-    setIsConfirmDialogOpen,
-
-    // delete
+    isLoading,           // 👈 ใช้ตรงนี้
+    isEditDialogOpen, setIsEditDialogOpen,
+    isCreateDialogOpen, setIsCreateDialogOpen,
+    isConfirmDialogOpen, setIsConfirmDialogOpen,
     setNotificationToDelete,
     handleDelete,
+    currentForm, setCurrentForm,
+    handleCreate, handleUpdate,
+    openCreateDialog, openEditDialog,
+    searchInput, setSearchInput,
 
-    // form state
-    currentForm,
-    setCurrentForm,
-
-    // submit
-    handleCreate,
-    handleUpdate,
-
-    // helpers เปิด dialog แบบถูกวิธี (รีเซ็ต/อัดค่าให้อัตโนมัติ)
-    openCreateDialog,
-    openEditDialog,
   } = useNotifications();
 
   
@@ -76,11 +60,12 @@ const NotificationPage: React.FC = () => {
     },
   };
 
-  const sortedNotifications = [...filteredNotifications].sort((a, b) => {
-    const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
-    const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
-    return bTime - aTime; 
-  }).reverse(); 
+  const sortedNotifications = useMemo(() => {
+    if (isLoading) return [];
+    const arr = [...filteredNotifications];
+    arr.sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime());
+    return arr;
+  }, [isLoading, filteredNotifications]).reverse();
 
 
   return (
@@ -120,8 +105,9 @@ const NotificationPage: React.FC = () => {
               <Input
                 placeholder="Search notifications..."
                 className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-700"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+
               />
             </div>
           </motion.div>
@@ -134,45 +120,39 @@ const NotificationPage: React.FC = () => {
           )}
 
           <AnimatePresence>
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-            >
-              {sortedNotifications.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border border-green-100"
-                >
-                  <h3 className="text-lg font-medium text-green-700">
-                    No Notification found
-                  </h3>
-                </motion.div>
-              ) : (
-                sortedNotifications.map((notification) => (
-                  <NotificationCard
-                    key={notification.id}
-                    // ส่ง notification เดิมไปเหมือนเดิม
-                    notification={notification}
-                    onEdit={() => {
-                      openEditDialog(notification);
-                      setIsEditDialogOpen(true);
-                    }}
-                    onDelete={() => {
-                      setNotificationToDelete(notification.id as any);
-                      setIsConfirmDialogOpen(true);
-                    }}
-                    onView={() => {
-                      setSelectedNotification(notification);
-                      setIsViewDialogOpen(true);
-                    }}
-                  />
-                ))
-              )}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+          >
+            {isLoading ? (
+              // 👉 ใช้ Skeleton แทนการ์ดจริง
+              Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+            ) : sortedNotifications.length === 0 ? (
+              <div className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border">
+                No Notification found
+              </div>
+            ) : (
+              sortedNotifications.map((notification) => (
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  onEdit={() => {
+                    openEditDialog(notification);
+                    setIsEditDialogOpen(true);
+                  }}
+                  onDelete={() => {
+                    setNotificationToDelete(notification.id as any);
+                    setIsConfirmDialogOpen(true);
+                  }}
+                  onView={() => {
+                    // ...
+                  }}
+                />
+              ))
+            )}
+          </motion.div>
+        </AnimatePresence>
         </motion.div>
 
         {/* CREATE */}

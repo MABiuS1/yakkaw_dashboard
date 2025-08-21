@@ -10,11 +10,11 @@ type Props = {
   notification: Notification | null;
 };
 
-export const NotificationDialog: React.FC<Props> = ({ isOpen, onOpenChange, notification }) => {
+export function NotificationDialog({ isOpen, onOpenChange, notification }:Props)  {
   if (!notification) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange} >
       <DialogContent className="border-blue-100 max-w-4xl max-h-screen h-[90vh] overflow-hidden">
         <Button
           variant="ghost"
@@ -25,14 +25,14 @@ export const NotificationDialog: React.FC<Props> = ({ isOpen, onOpenChange, noti
           <X className="text-2xl" />
         </Button>
 
-        <div className="flex flex-col gap-4 pr-2 max-h-[75vh]">
+        <div className="flex flex-col gap-4 max-h-[75vh]">
           <DialogHeader>
             <DialogTitle className="text-blue-800">{notification.title}</DialogTitle>
             <p className="text-xs text-blue-500 mt-1">{notification.time}</p>
           </DialogHeader>
 
           {/* เนื้อหา: รูปลอยซ้าย + ข้อความล้อมรูป */}
-          <div className="overflow-y-auto md:after:content-[''] md:after:block md:after:clear-both">
+          <div className="overflow-y-auto overscroll-contain md:after:content-[''] md:after:block md:after:clear-both">
             {notification.icon && (
               <motion.img
                 src={notification.icon}

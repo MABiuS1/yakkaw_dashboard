@@ -1,95 +1,142 @@
 // useNotification.ts
 'use client'
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { Notification, NotificationForm } from "@/constant/notificationData";
-
 
 const EMPTY_FORM: NotificationForm = { title: "", message: "", category: "", icon: "" };
 const API = "http://localhost:8080";
 
 export const useNotifications = () => {
-  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  // --- data ---
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [error, setError] = useState<string>("");
+  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
+  const [searchInput, setSearchInput] = useState("");  // สิ่งที่พิมพ์จริง
+  const [searchQuery, setSearchQuery] = useState("");  // สิ่งที่ใช้ค้นหา (debounced)
 
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
+  // --- status ---
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);         // โหลดครั้งแรก + refetch
+  const [isFetching, setIsFetching] = useState<boolean>(false);       // โหลดรอบต่อๆไป
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  // --- dialogs ---
+  const [isEditDialogOpen, _setIsEditDialogOpen] = useState<boolean>(false);
+  const [isCreateDialogOpen, _setIsCreateDialogOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
 
-  const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
+  const [notificationToDelete, setNotificationToDelete] = useState<string | number | null>(null);
 
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
-  // 👉 ฟอร์มที่ใช้ใน Dialog (Create/Update)
   const [currentForm, setCurrentForm] = useState<NotificationForm>(EMPTY_FORM);
-  // 👉 id ที่กำลังแก้ไข (ถ้า null คือโหมด create)
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  
-  
+  // สำหรับยกเลิก fetch เดิมเมื่อมีรอบใหม่
+  const fetchAbortRef = useRef<AbortController | null>(null);
 
-  const checkAuth = async () => {
-    try {
-      const r = await fetch(`${API}/me`, { credentials: "include" });
-      if (!r.ok) throw new Error("Unauthorized");
-    } catch {
-      window.location.href = "/login";
-    }
+  // transition (เผื่อไปใช้กับ UI ตอนอัปเดต state หนักๆ)
+  const [_isPending, startTransition] = useTransition();
+
+  // -------- utils --------
+  const resetForm = () => {
+    setEditingId(null);
+    setCurrentForm(EMPTY_FORM);
   };
 
-  const fetchNotifications = async () => {
+  const setIsEditDialogOpen = (open: boolean) => {
+    if (!open) resetForm();
+    _setIsEditDialogOpen(open);
+  };
+  const setIsCreateDialogOpen = (open: boolean) => {
+    if (!open) resetForm();
+    _setIsCreateDialogOpen(open);
+  };
+
+  // -------- auth --------
+  const checkAuth = async () => {
+    const r = await fetch(`${API}/me`, { credentials: "include" });
+    if (!r.ok) throw new Error("Unauthorized");
+  };
+
+  // -------- fetch --------
+  const fetchNotifications = async (isInitial = false) => {
+    // ยกเลิกของเก่า (ถ้ามี)
+    fetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
     try {
-      const r = await fetch(`${API}/notifications`, { credentials: "include" });
+      isInitial ? setIsLoading(true) : setIsFetching(true);
+      setError("");
+
+      const r = await fetch(`${API}/notifications`, {
+        credentials: "include",
+        signal: controller.signal,
+      });
       if (!r.ok) throw new Error("Failed to fetch notifications");
       const data: Notification[] = await r.json();
-      setNotifications(data || []);
-    } catch (err) {
-      setError((err as Error).message);
+
+      startTransition(() => {
+        setNotifications(data || []);
+      });
+    } catch (err: any) {
+      if (err?.name === "AbortError") return; // โดนยกเลิกรอบเก่า
+      setError(err?.message ?? "Failed to fetch notifications");
+    } finally {
+      isInitial ? setIsLoading(false) : setIsFetching(false);
     }
   };
 
-  // 👉 helper: เปิด dialog แบบถูกวิธี
+  // -------- helpers (open dialogs) --------
   const openCreateDialog = () => {
-    setCurrentForm(EMPTY_FORM);
-    setEditingId(null);
+    resetForm();
     setIsCreateDialogOpen(true);
   };
 
   const openEditDialog = (n: Notification) => {
-  setEditingId(n.id);
-  setCurrentForm({
-    title: n.title ?? "",
-    message: n.message ?? "",
-    category: n.category ?? "",
-    icon: n.icon ?? "",
-  });
-  setIsEditDialogOpen(true);
-};
+    setEditingId(Number(n.id));
+    setCurrentForm({
+      title: n.title ?? "",
+      message: n.message ?? "",
+      category: n.category ?? "",
+      icon: n.icon ?? "",
+    });
+    setIsEditDialogOpen(true);
+  };
 
+  // -------- CRUD --------
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCreating) return;
     try {
+      setIsCreating(true);
       const r = await fetch(`${API}/admin/notifications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(currentForm), // ส่งเฉพาะ body ฟอร์ม
+        body: JSON.stringify(currentForm),
       });
       if (!r.ok) throw new Error("Failed to create notification");
-      await fetchNotifications();
+
+      // refetch
+      await fetchNotifications(false);
       setIsCreateDialogOpen(false);
-      setCurrentForm(EMPTY_FORM);
-    } catch (err) {
-      setError((err as Error).message);
+      resetForm();
+    } catch (err: any) {
+      setError(err?.message ?? "Failed to create notification");
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingId) return;
+    if (!editingId || isUpdating) return;
     try {
+      setIsUpdating(true);
       const r = await fetch(`${API}/admin/notifications/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -97,78 +144,96 @@ export const useNotifications = () => {
         body: JSON.stringify(currentForm),
       });
       if (!r.ok) throw new Error("Failed to update notification");
-      await fetchNotifications();
+
+      await fetchNotifications(false);
       setIsEditDialogOpen(false);
-      setEditingId(null);
-      setCurrentForm(EMPTY_FORM);
-    } catch (err) {
-      setError((err as Error).message);
+      resetForm();
+    } catch (err: any) {
+      setError(err?.message ?? "Failed to update notification");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!notificationToDelete) return;
+    if (!notificationToDelete || isDeleting) return;
     try {
+      setIsDeleting(true);
       const r = await fetch(`${API}/admin/notifications/${notificationToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });
       if (!r.ok) throw new Error("Failed to delete notification");
-      await fetchNotifications();
+
+      await fetchNotifications(false);
       setIsConfirmDialogOpen(false);
       setNotificationToDelete(null);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (err: any) {
+      setError(err?.message ?? "Failed to delete notification");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  // -------- effects --------
+  // โหลดครั้งแรก: auth + data (ถ้า auth fail → redirect ที่หน้า /login)
   useEffect(() => {
-    checkAuth();
-    fetchNotifications();
+    (async () => {
+      try {
+        await checkAuth();
+        await fetchNotifications(true);
+      } catch {
+        window.location.href = "/login";
+      }
+    })();
+
+    return () => {
+      fetchAbortRef.current?.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // debounce searchInput -> searchQuery (200–300ms)
   useEffect(() => {
-    if (searchQuery) {
-      setFilteredNotifications(
-        notifications.filter((n) =>
-          n.title.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
-    } else {
-      setFilteredNotifications(notifications);
-    }
-  }, [searchQuery, notifications]);
+    const t = setTimeout(() => setSearchQuery(searchInput.trim()), 250);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // filter แบบ memo
+  const computedFiltered = useMemo(() => {
+    if (!searchQuery) return notifications;
+    const q = searchQuery.toLowerCase();
+    return notifications.filter((n) =>
+      (n.title ?? "").toLowerCase().includes(q) ||
+      (n.message ?? "").toLowerCase().includes(q) ||
+      (n.category ?? "").toLowerCase().includes(q)
+    );
+  }, [notifications, searchQuery]);
+
+  useEffect(() => {
+    setFilteredNotifications(computedFiltered);
+  }, [computedFiltered]);
 
   return {
     // lists
-    filteredNotifications,
     notifications,
+    filteredNotifications,
 
-    // search
-    searchQuery,
+    // search (แยก input กับ query เผื่อ debounce)
+    searchInput,
+    setSearchInput,
+    searchQuery, // ถ้าหน้า UI ยังใช้ searchQuery เดิมอยู่ก็ยังมีให้
     setSearchQuery,
 
     // dialogs
     isEditDialogOpen,
-    setIsEditDialogOpen: (open: boolean) => {
-      if (!open) {
-        setEditingId(null);
-        setCurrentForm(EMPTY_FORM);
-      }
-      setIsEditDialogOpen(open);
-    },
+    setIsEditDialogOpen,
     isCreateDialogOpen,
-    setIsCreateDialogOpen: (open: boolean) => {
-      if (!open) {
-        setEditingId(null);
-        setCurrentForm(EMPTY_FORM);
-      }
-      setIsCreateDialogOpen(open);
-    },
+    setIsCreateDialogOpen,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
 
-    // helper funcs for main
+    // helper funcs
     openCreateDialog,
     openEditDialog,
 
@@ -192,7 +257,17 @@ export const useNotifications = () => {
     handleCreate,
     handleUpdate,
 
+    // status
+    isLoading,   // โหลดครั้งแรก (ใช้กับ skeleton ทั้งหน้า)
+    isFetching,  // รีเฟรชข้อมูลรอบหลัง (เช่นหลังสร้าง/อัปเดต/ลบ)
+    isCreating,
+    isUpdating,
+    isDeleting,
+
     // error
     error,
+
+    // manual refetch (ถ้าหน้าไหนอยากใช้ปุ่ม Refresh)
+    refetch: () => fetchNotifications(false),
   };
 };

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import type { CategoryCardProps } from "@/constant/categoryData";
 
-export const CategoryCard: React.FC<CategoryCardProps> = ({ category, onEdit, onDelete }) => {
+export const CategoryCard = ({ category, onEdit, onDelete }:CategoryCardProps) => {
   return (
     <motion.li
       layout

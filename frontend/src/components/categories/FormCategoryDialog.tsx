@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { CategoryFormDialogProps } from "@/constant/categoryData";
 
-export const FormDialog: React.FC<CategoryFormDialogProps> = ({
+export const FormDialog = ({
   isOpen,
   onOpenChange,
   onSubmit,
@@ -12,7 +12,7 @@ export const FormDialog: React.FC<CategoryFormDialogProps> = ({
   setForm,
   title,
   submitButtonText,
-}) => {
+}:CategoryFormDialogProps) => {
   const resetForm = () => setForm({ name: "" });
 
   const handleOpenChange = (open: boolean) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -24,8 +24,17 @@ import {
   Cell
 } from "recharts";
 import { StatCard } from "@/components/ui/statCard";
+import dynamic from "next/dynamic";
+const OverviewChart = dynamic(() => import("@/components/dashboard/OverviewChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[380px] w-full animate-pulse bg-slate-200 rounded" />
+  ),
+});
 
-const DashboardPage: React.FC = () => {
+
+
+const DashboardPage = () => {
   const { filteredNotifications } = useNotifications();
   const { filteredSponsors } = useSponsors();
   const { filteredNews } = useNews();
@@ -38,12 +47,13 @@ const DashboardPage: React.FC = () => {
   const totalCategories = categories.length ?? 0;
 
   // ข้อมูลกราฟเปรียบเทียบ
-  const compareData = [
-    { name: "Notifications", count: totalNotifications },
-    { name: "Sponsors", count: totalSponsors },
-    { name: "News", count: totalNews },
-    { name: "Categories", count: totalCategories },
-  ];
+const compareData = useMemo(() => ([
+  { name: "Notifications", count: totalNotifications },
+  { name: "Sponsors", count: totalSponsors },
+  { name: "News", count: totalNews },
+  { name: "Categories", count: totalCategories },
+]), [totalNotifications, totalSponsors, totalNews, totalCategories]);
+
 
   const barColors = ["#3b82f6", "#f59e0b", "#8b5cf6", "#10b981"]; // blue, amber, purple, emerald
 
@@ -144,22 +154,7 @@ const DashboardPage: React.FC = () => {
                 <CardTitle className="text-slate-800">Overview Comparison</CardTitle>
               </CardHeader>
               <CardContent className="h-[380px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={compareData} margin={{ top: 20, right: 24, left: 0, bottom: 12 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tickMargin={8} />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" name="Total Data" radius={[8, 8, 0, 0]}>
-                      {compareData.map((_, idx) => (
-                        <Cell key={`cell-${idx}`} fill={barColors[idx % barColors.length]} />
-                      ))}
-                      <LabelList dataKey="count" position="top" className="fill-slate-700 text-sm" />
-                    </Bar>
-
-                  </BarChart>
-                </ResponsiveContainer>
+                <OverviewChart data={compareData} colors={barColors} />
               </CardContent>
             </Card>
           </motion.div>

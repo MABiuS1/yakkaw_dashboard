@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { SponsorCardProps } from "@/constant/sponsorData";
 
-export const SponsorsCard: React.FC<SponsorCardProps> = ({
+export const SponsorsCard = ({
   sponsor,
   onEdit,
   onDelete,
   onView,
-}) => {
+}:SponsorCardProps) => {
    const [isExpanded, setIsExpanded] = useState(false);
   
     const toggleExpand = () => setIsExpanded(!isExpanded);

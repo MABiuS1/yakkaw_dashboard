@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,17 +14,17 @@ import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
 import { SponsorDialog } from "@/components/sponsors/SponsorDialog";
 
 import Navbar from "@/components/ui/Navbar";
+import { CardSkeleton } from "@/components/ui/CardSkeleton";
 
-const SponsorsPage: React.FC = () => {
+const SponsorsPage = () => {
   const {
     // data
-    sponsors,
     filteredSponsors,
     error,
 
-    // search
-    searchQuery,
-    setSearchQuery,
+    // ✅ ใช้คู่ searchInput + setSearchInput (debounce อยู่ใน hook)
+    searchInput,
+    setSearchInput,
 
     // dialogs
     isEditDialogOpen,
@@ -52,6 +52,10 @@ const SponsorsPage: React.FC = () => {
     handleCreate,
     handleUpdate,
     handleDelete,
+
+    // ✅ สถานะโหลด
+    isLoading,   // โหลดครั้งแรก (ใช้โชว์ skeleton)
+    isFetching,  // รีเฟรชหลัง create/update/delete (โชว์แถบบาง ๆ ด้านบน)
   } = useSponsors();
 
   const containerVariants = {
@@ -76,21 +80,34 @@ const SponsorsPage: React.FC = () => {
     },
   };
 
-  const sortedSponsors = [...filteredSponsors]
-    .sort((a, b) => {
+  const sortedSponsors = useMemo(() => {
+    if (isLoading) return [];
+    const arr = [...filteredSponsors];
+    arr.sort((a, b) => {
       const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
       const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
-      return bTime - aTime;
+      return bTime - aTime; // ใหม่ก่อน
     });
+    return arr;
+  }, [isLoading, filteredSponsors]).reverse();
+
 
   return (
     <>
       <Navbar />
+
+      {/* แถบสถานะรีเฟรชข้อมูล (หลังโหลดครั้งแรก) */}
+      {isFetching && !isLoading && (
+        <div className="fixed top-0 left-0 right-0 z-40">
+          <div className="h-1 w-full bg-gradient-to-r from-amber-400 via-indigo-400 to-amber-400 animate-[pulse_1.2s_ease-in-out_infinite]" />
+        </div>
+      )}
+
       <div className="bg-gradient-to-b from-amber-50 to-indigo-50 min-h-screen pt-7 pb-10 px-4 sm:px-6 lg:px-8 ">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="max-w-7xl mx-auto"
         >
           <div className="flex justify-between items-center mb-6">
@@ -99,8 +116,9 @@ const SponsorsPage: React.FC = () => {
               <p className="text-amber-600 mt-1">Add, update, and delete sponsors</p>
             </div>
             <Button
-              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-700"
+              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-700 disabled:opacity-60"
               onClick={openCreateDialog}
+              disabled={isLoading}
             >
               <Plus size={16} /> Add Sponsor
             </Button>
@@ -108,21 +126,19 @@ const SponsorsPage: React.FC = () => {
 
           {/* Search */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ delay: 0.15, duration: 0.35 }}
             className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6"
           >
             <div className="rounded-xl md:col-span-6 relative shadow-md ">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400 "
-                size={20}
-              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400" size={20} />
               <Input
                 placeholder="Search sponsors..."
-                className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-700"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-300 disabled:opacity-60"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                disabled={isLoading}
               />
             </div>
           </motion.div>
@@ -143,15 +159,16 @@ const SponsorsPage: React.FC = () => {
               animate="visible"
               className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
             >
-              {sortedSponsors.length === 0 ? (
+              {isLoading ? (
+                // ✅ โชว์ skeleton ระหว่างโหลดครั้งแรก
+                Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+              ) : sortedSponsors.length === 0 ? (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border border-amber-100"
                 >
-                  <h3 className="text-lg font-medium text-amber-700">
-                    No sponsor found
-                  </h3>
+                  <h3 className="text-lg font-medium text-amber-700">No sponsor found</h3>
                 </motion.div>
               ) : (
                 sortedSponsors.map((sponsor) => (
@@ -163,7 +180,7 @@ const SponsorsPage: React.FC = () => {
                         setIsEditDialogOpen(true);
                       }}
                       onDelete={() => {
-                        setSponsorsToDelete(sponsor.id);
+                        setSponsorsToDelete(sponsor.id!);
                         setIsConfirmDialogOpen(true);
                       }}
                       onView={() => {

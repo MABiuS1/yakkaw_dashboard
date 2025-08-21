@@ -17,7 +17,7 @@ export type SponsorFormDialogProps = {
 
 const MAX_DESCRIPTION = 2000;
 
-export const SponsorFormDialog: React.FC<SponsorFormDialogProps> = ({
+export const SponsorFormDialog = ({
   isOpen,
   onOpenChange,
   onSubmit,
@@ -25,7 +25,7 @@ export const SponsorFormDialog: React.FC<SponsorFormDialogProps> = ({
   setForm,
   title,
   submitButtonText,
-}) => {
+}:SponsorFormDialogProps) => {
   const [fullScreen, setFullScreen] = React.useState(false);
   const remaining = MAX_DESCRIPTION - form.description.length;
 

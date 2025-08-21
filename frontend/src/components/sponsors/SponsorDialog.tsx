@@ -10,7 +10,7 @@ type Props = {
   sponsor: Sponsor | null;
 };
 
-export const SponsorDialog: React.FC<Props> = ({ isOpen, onOpenChange, sponsor }) => {
+export const SponsorDialog = ({ isOpen, onOpenChange, sponsor }:Props) => {
   if (!sponsor) return null;
 
   return (

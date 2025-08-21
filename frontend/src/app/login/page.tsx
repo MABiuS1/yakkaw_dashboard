@@ -1,31 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import qs from "qs";
+import { Loader2, Eye, EyeOff, User, Lock } from "lucide-react";
 import {
-  Loader2,
-  Eye,
-  EyeOff,
-  User,
-  Lock,
-  LogIn,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+  Card, CardContent, CardFooter, CardHeader, CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import qs from "qs";
 
-const LoginPage: React.FC = () => {
+const LoginPage = () => {
   const router = useRouter();
+  
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -33,10 +24,14 @@ const LoginPage: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const LOGIN_TIMEOUT_MS = 10000; // 10 seconds
 
   useEffect(() => {
+    router.prefetch("/dashboard");
+
     const savedUsername = localStorage.getItem("rememberedUsername");
     if (savedUsername) {
       setFormData((prev) => ({
@@ -45,15 +40,15 @@ const LoginPage: React.FC = () => {
         rememberMe: true,
       }));
     }
-  }, []);
+  }, [router]);
 
-  const handleInputChange = (e: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    setError("");
+    if (error) setError("");
   };
 
   const validateForm = () => {
@@ -68,9 +63,9 @@ const LoginPage: React.FC = () => {
     return true;
   };
 
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    if (isSubmitting) return; // กันกดซ้ำ
     if (!validateForm()) return;
 
     if (loginAttempts >= 5) {
@@ -78,8 +73,10 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
     setError("");
+    setIsSubmitting(true);
+
+    const t0 = performance.now();
 
     try {
       const response = await axios.post(
@@ -89,9 +86,7 @@ const LoginPage: React.FC = () => {
           password: formData.password,
         }),
         {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
           timeout: 10000,
           withCredentials: true,
         }
@@ -103,21 +98,29 @@ const LoginPage: React.FC = () => {
         localStorage.removeItem("rememberedUsername");
       }
 
-      router.push("/dashboard");
-    } catch (err) {
-      setLoginAttempts((prev) => prev + 1);
-      setError("Failed to login. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
-    }
+      // ใช้ transition เพื่อลดการ block UI ตอนเปลี่ยนหน้า
+      startTransition(() => {
+        router.push("/dashboard");
+      });
+    } catch (err: any) {
+  // แยกกรณี timeout vs credential ผิด
+  if (err.code === "ECONNABORTED") {
+    setError(`Login timed out after ${LOGIN_TIMEOUT_MS / 1000}s. Please try again.`);
+  } else if (err.response?.status === 401) {
+    setError("Invalid username or password.");
+  } else if (err.response) {
+    setError(err.response.data?.message ?? `Login failed (HTTP ${err.response.status}).`);
+  } else {
+    setError("Network error. Please check your connection.");
+  }
+  setIsSubmitting(false);
+}
   };
 
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center"
-      style={{
-        backgroundImage: "url('/assets/background.webp')",
-      }}
+      style={{ backgroundImage: "url('/assets/background.webp')" }}
     >
       <Card className="w-[90%] sm:w-[400px] bg-white/10 backdrop-blur-md text-white border border-white/20 shadow-lg rounded-xl p-6">
         <CardHeader>
@@ -148,8 +151,8 @@ const LoginPage: React.FC = () => {
                   placeholder="Enter your username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  disabled={isLoading}
                   className="pl-10 bg-white/10 text-white placeholder-white/60 border-white/30 focus:border-white focus:ring-white"
+                  autoComplete="username"
                 />
               </div>
             </div>
@@ -165,8 +168,8 @@ const LoginPage: React.FC = () => {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  disabled={isLoading}
                   className="pl-10 pr-10 bg-white/10 text-white placeholder-white/60 border-white/30 focus:border-white focus:ring-white"
+                  autoComplete="current-password"
                 />
                 <Button
                   type="button"
@@ -174,6 +177,7 @@ const LoginPage: React.FC = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-white/70" />
@@ -196,36 +200,27 @@ const LoginPage: React.FC = () => {
                 />
                 <Label htmlFor="rememberMe">Remember me</Label>
               </div>
-              
-              {/* <Button
-                type="button"
-                variant="link"
-                className="text-white hover:underline"
-                onClick={() => router.push("/forgot-password")}
-              >
-                Forgot password?
-              </Button> */}
             </div>
           </CardContent>
 
           <CardFooter className="mt-4 flex flex-col gap-4">
             <Button
               type="submit"
-              className="w-full bg-white text-black hover:bg-gray-100"
-              disabled={isLoading}
+              className="w-full bg-white text-black hover:bg-gray-100 disabled:opacity-70"
+              disabled={isSubmitting}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Logging in...
+                </span>
               ) : (
                 "Log In"
               )}
             </Button>
 
             <p className="text-sm text-white text-center">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Button
                 type="button"
                 variant="link"

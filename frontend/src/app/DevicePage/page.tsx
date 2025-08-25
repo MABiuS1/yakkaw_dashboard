@@ -10,7 +10,7 @@ import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
 import Navbar from "@/components/ui/Navbar";
 import { FormDeviceDialog } from "@/components/ui/FormDeviceDialog";
 
-const DevicePage: React.FC = () => {
+const DevicePage = () => {
   const {
     devices,
     isLoading,

@@ -8,7 +8,7 @@ interface ConfirmDeleteDialogProps {
   onConfirm: () => void;
 }
 
-export const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({ isOpen, onOpenChange, onConfirm }) => {
+export const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm }:ConfirmDeleteDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>

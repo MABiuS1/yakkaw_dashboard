@@ -18,7 +18,7 @@ type Props = {
   
 };
 
-export const FormDeviceDialog: React.FC<Props> = ({
+export const FormDeviceDialog = ({
   isOpen,
   onOpenChange,
   onSubmit,
@@ -26,7 +26,7 @@ export const FormDeviceDialog: React.FC<Props> = ({
   setDevice,
   title,
   submitButtonText,
-}) => {
+}:Props) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const parsedValue = name === "longitude" || name === "latitude" ? parseFloat(value) : value;

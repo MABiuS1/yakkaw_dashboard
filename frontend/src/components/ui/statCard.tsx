@@ -15,7 +15,7 @@ const colorMap = {
   emerald:{ iconBg: "bg-emerald-50",iconText: "text-emerald-600",bar: "bg-emerald-500/15"},
 };
 
-export const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon: Icon, color }) => {
+export const StatCard = ({ title, value, subtitle, icon: Icon, color }:StatCardProps) => {
   const c = colorMap[color];
   return (
     <div

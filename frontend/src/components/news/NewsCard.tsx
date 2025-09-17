@@ -28,28 +28,50 @@ export function NewsCard({ news, onEdit, onDelete }: NewsCardProps) {
 
   return (
     <motion.div className="bg-white rounded-lg overflow-hidden border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 border-b-2">
-        <div className="flex items-center gap-3">
-          <CardTitle className="text-lg font-medium text-purple-800">
-            {title}
-            {categoryText && <p className="text-xs text-purple-400 -mt-1">{categoryText}</p>}
-            {dateText && <p className="text-xs text-purple-500 mt-2">{dateText}</p>}
-          </CardTitle>
-        </div>
+      <CardHeader className="px-4 pt-4 pb-3 border-b flex flex-row items-start justify-between gap-3">
+  {/* Left: Title + Meta */}
+  <div className="flex-1 min-w-0">
+    <CardTitle className="text-base font-semibold text-purple-900 leading-tight line-clamp-2">
+      {title}
+    </CardTitle>
 
-        <div className="flex gap-1">
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <Button variant="ghost" size="icon" onClick={onEdit} className="text-purple-600 hover:text-purple-800 hover:bg-purple-50">
-              <Pencil size={16} />
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <Button variant="ghost" size="icon" onClick={onDelete} className="text-purple-600 hover:text-purple-800 hover:bg-purple-50">
-              <Trash2 size={16} />
-            </Button>
-          </motion.div>
-        </div>
-      </CardHeader>
+    <div className="mt-1 flex items-center gap-2 text-xs text-purple-700">
+      {categoryText && (
+        <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-800">
+          {categoryText}
+        </span>
+      )}
+      {dateText && <span className="truncate text-purple-500">{dateText}</span>}
+    </div>
+  </div>
+
+  {/* Right: Actions */}
+  <div className="shrink-0 flex items-center gap-1">
+    <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onEdit}
+        className="text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+        aria-label="Edit news"
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
+    </motion.div>
+    <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onDelete}
+        className="text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+        aria-label="Delete news"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </motion.div>
+  </div>
+</CardHeader>
+
 
       <CardContent className="flex-grow p-0">
         <ImageWrapper href={news.url} label={`Open article: ${news.title}`}>

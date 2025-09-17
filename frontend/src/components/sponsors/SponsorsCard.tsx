@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { SponsorCardProps } from "@/constant/sponsorData";
@@ -10,63 +10,97 @@ export const SponsorsCard = ({
   onEdit,
   onDelete,
   onView,
-}:SponsorCardProps) => {
-   const [isExpanded, setIsExpanded] = useState(false);
-  
-    const toggleExpand = () => setIsExpanded(!isExpanded);
-  
-  
-    const shouldTruncate = sponsor.description.length > 50;
-    const truncatedMessage = shouldTruncate
-      ? `${sponsor.description.substring(0, 75)}...`
-      : sponsor.description;
-  
+}: SponsorCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const toggleExpand = () => setIsExpanded((v) => !v);
+
+  const desc = sponsor.description || "";
+  const truncated = desc.length > 140 ? `${desc.slice(0, 140)}…` : desc;
+
   return (
-   <motion.div
-         className="bg-white rounded-lg overflow-hidden border border-amber-100 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col"
-       >
-         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b-2 ">
-           <div className="flex items-center gap-3">
-             <CardTitle className="text-lg font-medium text-amber-800">
-               {sponsor.name}
-               <p className="text-xs text-amber-400 -mt-1">{sponsor.category}</p>
-                <p className="text-xs text-amber-500 mt-2">{sponsor.updatedAt}</p>
-               
-             </CardTitle>
-           </div>
-   
-           <div className="flex gap-1">
-             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-               <Button variant="ghost" size="icon" onClick={onEdit} className="text-amber-600 hover:text-amber-800 hover:bg-amber-50">
-                 <Pencil size={16} />
-               </Button>
-             </motion.div>
-             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-               <Button variant="ghost" size="icon" onClick={onDelete} className="text-amber-600 hover:text-amber-800 hover:bg-amber-50">
-                 <Trash2 size={16} />
-               </Button>
-             </motion.div>
-           </div>
-         </CardHeader>
-   
-         <CardContent className="flex-grow p-0">
-           <div
-             className="relative w-full h-48 cursor-pointer group overflow-hidden rounded-b-lg"
-             onClick={onView}
-           >
-             <motion.img
-               src={sponsor.logo || "/placeholder.png"} // กัน null
-               alt={sponsor.name}
-               className="w-full h-full object-cover group-hover:brightness-90 transition-all duration-300"
-               onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.png"; }}
-             />
-             <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4">
-               <p className="text-white group-hover:underline transition-all duration-300">
-                 {isExpanded ? sponsor.description : truncatedMessage}
-               </p>
-             </div>
-           </div>
-         </CardContent>
-       </motion.div>
+    <motion.div
+      layout
+      className="
+        bg-white rounded-xl overflow-hidden
+        border border-amber-100 shadow-sm hover:shadow-md
+        transition-all duration-300 flex flex-col
+        min-h-[300px]
+      "
+    >
+      {/* Header */}
+      <CardHeader className="px-4 pt-4 pb-3 border-b flex flex-row items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <CardTitle className="text-base font-semibold text-amber-900 leading-tight line-clamp-2">
+            {sponsor.name}
+          </CardTitle>
+          <div className="mt-1 flex items-center gap-2 text-xs text-amber-700">
+            {sponsor.category && (
+              <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">
+                {sponsor.category}
+              </span>
+            )}
+            {sponsor.time && (
+              <span className="truncate text-amber-500">{sponsor.time}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="shrink-0 flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onEdit}
+            className="text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+            aria-label="Edit sponsor"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            className="text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+            aria-label="Delete sponsor"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+
+      {/* Image + Message (ชิดล่างของการ์ด) */}
+      <CardContent className="p-0 mt-auto">
+        <div
+          className="relative w-full aspect-[16/9] bg-slate-100 overflow-hidden cursor-pointer group"
+          onClick={onView}
+          role="button"
+          aria-label="Open sponsor"
+        >
+          <motion.img
+            src={sponsor.logo || "/placeholder.png"}
+            alt={sponsor.name || "Sponsor image"}
+            className="absolute inset-0 w-full h-full object-cover group-hover:brightness-95 transition-all duration-300"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/placeholder.png";
+            }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.3 }}
+          />
+
+          {/* Overlay ข้อความ preview */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleExpand();
+            }}
+            className="absolute inset-x-0 bottom-0 text-left bg-gradient-to-t from-black/70 to-transparent p-3"
+          >
+            <p className="text-white text-sm leading-snug line-clamp-3">
+              {isExpanded ? desc : truncated}
+            </p>
+          </button>
+        </div>
+      </CardContent>
+    </motion.div>
   );
 };

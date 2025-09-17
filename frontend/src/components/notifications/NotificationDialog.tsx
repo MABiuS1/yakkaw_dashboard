@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Notification } from "@/constant/notificationData";
@@ -15,19 +15,20 @@ export function NotificationDialog({ isOpen, onOpenChange, notification }:Props)
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange} >
-      <DialogContent className="border-blue-100 max-w-4xl max-h-screen h-[90vh] overflow-hidden">
+      <DialogContent className="border-blue-100 p-7 max-w-4xl max-h-screen h-[90vh] overflow-hidden">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onOpenChange(false)}
-          className="absolute top-4 right-4 text-red-500 hover:text-red-700 z-10"
+          className="absolute top-5 right-5 text-red-500 hover:text-red-700 z-10"
         >
-          <X className="text-2xl" />
+          <X className="text-xl"/>
         </Button>
 
         <div className="flex flex-col gap-4 max-h-[75vh]">
           <DialogHeader>
             <DialogTitle className="text-blue-800">{notification.title}</DialogTitle>
+            <DialogDescription className="text-blue-500">Category: {notification.category}</DialogDescription>
             <p className="text-xs text-blue-500 mt-1">{notification.time}</p>
           </DialogHeader>
 

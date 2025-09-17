@@ -55,15 +55,7 @@ const NewsPage = () => {
   } = useNews();
 
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  };
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } },
-    exit: { scale: 0.96, opacity: 0, transition: { duration: 0.2 } },
-  };
+ 
     const sortedSponsors = useMemo(() => {
       if (isLoading) return [];
       const arr = [...filteredNews];
@@ -91,7 +83,7 @@ const NewsPage = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.35 }}
           className="p-6 max-w-7xl mx-auto"
         >
           <div className="flex justify-between items-center mb-6">
@@ -108,24 +100,17 @@ const NewsPage = () => {
             </Button>
           </div>
 
-          {/* Search */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.35 }}
-            className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6"
-          >
-            <div className="rounded-xl md:col-span-6 relative shadow-lg hover:shadow-xl transition-all duration-300">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
-              <Input
-                placeholder="Search News..."
-                className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-300 disabled:opacity-60"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-          </motion.div>
+         {/* Search */}
+                   <div className="mb-6 max-w-xl relative">
+                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400" size={18} />
+                     <Input
+                       placeholder="Search News..."
+                       className="pl-9 bg-white py-5 rounded-xl shadow-sm disabled:opacity-60"
+                       value={searchInput}
+                       onChange={(e) => setSearchInput(e.target.value)}
+                       disabled={isLoading}
+                     />
+                   </div>
 
           {/* Error */}
           {error && (
@@ -138,7 +123,7 @@ const NewsPage = () => {
           {/* List */}
           <AnimatePresence>
             <motion.div
-              variants={containerVariants}
+          
               initial="hidden"
               animate="visible"
               className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
@@ -150,14 +135,14 @@ const NewsPage = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  variants={itemVariants}
+          
                   className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100"
                 >
                   <h3 className="text-lg font-medium text-purple-700">No News found</h3>
                 </motion.div>
               ) : (
                 sortedSponsors.map((news) => (
-                  <motion.div key={news.id} variants={itemVariants} exit="exit">
+                  <motion.div key={news.id} exit="exit">
                     <NewsCard
                       news={news}
                       onEdit={() => openEditDialog(news)}

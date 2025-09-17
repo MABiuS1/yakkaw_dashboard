@@ -21,7 +21,7 @@ function NotificationPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
- const {
+  const {
     filteredNotifications,
     error,
     isLoading,           // 👈 ใช้ตรงนี้
@@ -37,28 +37,8 @@ function NotificationPage() {
 
   } = useNotifications();
 
-  
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 },
-    },
-    exit: {
-      scale: 0.96,
-      opacity: 0,
-      transition: { duration: 0.2 },
-    },
-  };
+
 
   const sortedNotifications = useMemo(() => {
     if (isLoading) return [];
@@ -75,7 +55,7 @@ function NotificationPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.35 }}
           className="max-w-7xl mx-auto"
         >
           <div className="flex justify-between items-center mb-6">
@@ -91,26 +71,17 @@ function NotificationPage() {
             </Button>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6"
-          >
-            <div className="rounded-xl md:col-span-6 relative shadow-md ">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 "
-                size={20}
-              />
-              <Input
-                placeholder="Search notifications..."
-                className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-700"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-
-              />
-            </div>
-          </motion.div>
+          {/* Search */}
+          <div className="mb-6 max-w-xl relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
+            <Input
+              placeholder="Search Notifications..."
+              className="pl-9 bg-white py-5 rounded-xl shadow-sm disabled:opacity-60"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
 
           {error && (
             <Alert variant="destructive" className="mb-4">
@@ -120,39 +91,40 @@ function NotificationPage() {
           )}
 
           <AnimatePresence>
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-          >
-            {isLoading ? (
-              // 👉 ใช้ Skeleton แทนการ์ดจริง
-              Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
-            ) : sortedNotifications.length === 0 ? (
-              <div className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border">
-                No Notification found
-              </div>
-            ) : (
-              sortedNotifications.map((notification) => (
-                <NotificationCard
-                  key={notification.id}
-                  notification={notification}
-                  onEdit={() => {
-                    openEditDialog(notification);
-                    setIsEditDialogOpen(true);
-                  }}
-                  onDelete={() => {
-                    setNotificationToDelete(notification.id as any);
-                    setIsConfirmDialogOpen(true);
-                  }}
-                  onView={() => {
-                    // ...
-                  }}
-                />
-              ))
-            )}
-          </motion.div>
-        </AnimatePresence>
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            >
+              {isLoading ? (
+                // 👉 ใช้ Skeleton แทนการ์ดจริง
+                Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+              ) : sortedNotifications.length === 0 ? (
+                <div className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border">
+                  No Notification found
+                </div>
+              ) : (
+                sortedNotifications.map((notification) => (
+                  <NotificationCard
+                    key={notification.id}
+                    notification={notification}
+                    onEdit={() => {
+                      openEditDialog(notification);
+                      setIsEditDialogOpen(true);
+                    }}
+                    onDelete={() => {
+                      setNotificationToDelete(notification.id as any);
+                      setIsConfirmDialogOpen(true);
+                    }}
+                    onView={() => {
+                      setSelectedNotification(notification);     // ✅ set ตัวที่เลือก
+                      setIsViewDialogOpen(true);                // ✅ เปิด dialog
+                    }}
+                  />
+                ))
+              )}
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
 
         {/* CREATE */}

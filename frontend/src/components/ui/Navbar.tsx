@@ -21,10 +21,10 @@ type NavItem = {
 };
 
 const DESKTOP_LINKS: NavItem[] = [
+  { href: "/categories", icon: FolderOpen, label: "Categories" },
   { href: "/notifications", icon: Bell, label: "Notifications" },
   { href: "/sponsor", icon: Gift, label: "Sponsor" },
   { href: "/news", icon: Newspaper, label: "News" },
-  { href: "/categories", icon: FolderOpen, label: "Categories" },
   { href: "/ColorRangeePage", icon: FolderOpen, label: "ColorRange" },
   { href: "/DevicePage", icon: FolderOpen, label: "DevicePage" },
 ];
@@ -57,31 +57,45 @@ const Navbar = () => {
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname?.startsWith(href));
 
   const DesktopNav = () => (
-    <nav className="hidden lg:flex items-center gap-1 xl:gap-2" aria-label="Primary">
-      {DESKTOP_LINKS.map((link) => {
-        const Icon = link.icon;
-        const active = isActive(link.href);
-        return (
-          <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}>
-            <motion.div
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.98 }}
-              className={[
-                "relative flex items-center px-3 xl:px-4 py-2 text-sm font-medium rounded-lg transition-colors",
-                active
-                  ? "bg-rose-500 text-white shadow-sm"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
-              ].join(" ")}
-            >
-              <Icon className="h-5 w-5 mr-2.5 opacity-90" />
-              {link.label}
-              {active && <span className="absolute -bottom-1 left-2 right-2 h-0.5 rounded bg-rose-500/90" />}
-            </motion.div>
-          </Link>
-        );
-      })}
-    </nav>
-  );
+  <nav className="hidden lg:flex h-16 items-stretch gap-1 xl:gap-2" aria-label="Primary">
+    {DESKTOP_LINKS.map((link) => {
+      const Icon = link.icon;
+      const active = isActive(link.href);
+
+      return (
+        <Link
+          key={link.href}
+          href={link.href}
+          aria-current={active ? "page" : undefined}
+          className="relative inline-flex items-stretch"
+        >
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className={[
+              // ทำให้ปุ่มสูงเท่า navbar และมี padding เท่ากันทุกอัน -> เส้นใต้จะสมมาตร
+              "relative flex items-center h-16 px-4 xl:px-5",
+              "text-sm xl:text-[15px] font-medium",
+              active ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
+            ].join(" ")}
+          >
+            <Icon className="h-5 w-5 mr-2.5 opacity-90" />
+            {link.label}
+
+            {/* เส้นใต้แบบเลื่อนด้วย layoutId (กว้างเท่าปุ่ม) */}
+            {active && (
+              <motion.span
+                layoutId="nav-underline"              // <<< magic: ทำให้เส้นเดียวกันย้ายตำแหน่งลื่น ๆ
+                className="absolute bottom-0 left-3 right-3 h-[3px] rounded-full bg-rose-600"
+                transition={{ type: "spring", stiffness: 500, damping: 34, mass: 0.4 }}
+              />
+            )}
+          </motion.div>
+        </Link>
+      );
+    })}
+  </nav>
+);
+
 
   const MobileNavSheet = () => (
     <Sheet>
@@ -115,12 +129,13 @@ const Navbar = () => {
                     whileHover={{ x: 2 }}
                     whileTap={{ scale: 0.98 }}
                     className={[
-                      "flex items-center px-4 py-2.5 my-1 text-sm font-medium rounded-lg transition-colors",
-                      active
-                        ? "bg-rose-600 text-white"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
-                    ].join(" ")}
-                  >
+  "relative flex items-center px-4 py-2.5 my-1 text-sm font-medium rounded-lg transition-colors",
+  active
+    ? "text-rose-700 bg-rose-50"
+    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
+].join(" ")}
+>
+  {active && <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-rose-600 rounded-l-lg" />}
                     <Icon className="h-5 w-5 mr-2.5 opacity-90" />
                     <span>{link.label}</span>
                   </motion.div>

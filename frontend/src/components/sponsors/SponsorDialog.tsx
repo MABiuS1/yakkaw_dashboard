@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Sponsor } from "@/constant/sponsorData";
@@ -15,12 +15,12 @@ export const SponsorDialog = ({ isOpen, onOpenChange, sponsor }:Props) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="border-amber-100 max-w-4xl max-h-screen h-[90vh] overflow-hidden">
+      <DialogContent className="border-amber-100 p-7 max-w-4xl max-h-screen h-[90vh] overflow-hidden">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onOpenChange(false)}
-          className="absolute top-4 right-4 text-red-500 hover:text-red-700 z-10"
+          className="absolute top-5 right-5 text-red-500 hover:text-red-700 z-10"
         >
           <X className="text-2xl" />
         </Button>
@@ -28,7 +28,8 @@ export const SponsorDialog = ({ isOpen, onOpenChange, sponsor }:Props) => {
         <div className="flex flex-col gap-4 pr-2 max-h-[75vh]">
           <DialogHeader>
             <DialogTitle className="text-amber-800">{sponsor.name}</DialogTitle>
-            <p className="text-xs text-amber-500 mt-1">{sponsor.updatedAt}</p>
+             <DialogDescription className="text-amber-600">Category: {sponsor.category}</DialogDescription>
+            <p className="text-xs text-amber-500 mt-1">{sponsor.time}</p>
           </DialogHeader>
 
           {/* เนื้อหา: รูปลอยซ้าย + ข้อความล้อมรูป */}

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-
+	"sync"
 	"yakkaw_dashboard/database"
 	"yakkaw_dashboard/services"
 )
@@ -12,14 +12,23 @@ import (
 type AirQualityController struct{}
 
 func NewAirQualityController() *AirQualityController {
-	return &AirQualityController{}
+    return &AirQualityController{}
+}
+
+// Handler สำหรับดึงค่าเฉลี่ย 24 ชั่วโมง
+func (ctl *AirQualityController) GetOneDayDataHandler(c echo.Context) error {
+    data, err := services.GetAirQuality24Hours()
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+    }
+    return c.JSON(http.StatusOK, data)
 }
 
 // Handler สำหรับดึงค่าเฉลี่ย 1 สัปดาห์
 func (ctl *AirQualityController) GetOneWeekDataHandler(c echo.Context) error {
-	data, err := services.GetAirQualityOneWeek()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+    data, err := services.GetAirQualityOneWeek()
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, data)
 }
@@ -76,6 +85,7 @@ func GetLatestAirQuality(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+
 // GetProvinceAveragePM25Handler ดึงค่าเฉลี่ย PM2.5 ของแต่ละจังหวัด
 func (ctl *AirQualityController) GetProvinceAveragePM25Handler(c echo.Context) error {
 	data, err := services.GetProvinceAveragePM25()
@@ -92,4 +102,35 @@ func (ctl *AirQualityController) GetSensorData7DaysHandler(c echo.Context) error
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, data)
+}
+
+
+var cache sync.Map
+func GetAirQualityOneYearSeriesByAddress(c echo.Context) error {
+	address := c.QueryParam("address")
+	if address == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "address is required"})
+	}
+
+	data, err := services.GetAirQualityOneYearSeriesByAddress(address)
+	cache.Store(address,data)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, data)
+}
+
+// GetAirQualityOneYearSeriesByProvince returns daily PM series (1 year) aggregated by province
+func GetAirQualityOneYearSeriesByProvince(c echo.Context) error {
+    province := c.QueryParam("province")
+    if province == "" {
+        return c.JSON(http.StatusBadRequest, map[string]string{"error": "province is required"})
+    }
+
+    data, err := services.GetAirQualityOneYearSeriesByProvince(province)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+    }
+    return c.JSON(http.StatusOK, data)
 }

@@ -19,5 +19,18 @@ export function middleware(req: NextRequest) {
 
 // กำหนด matcher ให้ middleware ทำงานกับทุก path ที่ต้องการตรวจสอบ
 export const config = {
-    matcher: ['/', '/dashboard/:path*', '/profile/:path*'], // สามารถเพิ่ม path อื่น ๆ ได้
+    matcher: [
+        '/',
+        '/dashboard/:path*',
+        '/qr-login',
+        '/qr-create-device',
+        '/profile/:path*',
+        '/tracking/:path*',
+        '/notifications/:path*',
+        '/sponsor/:path*',
+        '/news/:path*',
+        '/categories/:path*',
+        '/ColorRangeePage/:path*',
+        '/DevicePage/:path*',
+    ], // Protect key app routes behind auth
 };

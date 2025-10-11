@@ -3,10 +3,11 @@ package routes
 import (
 	"yakkaw_dashboard/controllers"
 	"yakkaw_dashboard/database"
-	"yakkaw_dashboard/middleware"
+	"yakkaw_dashboard/middlewares"
 	"yakkaw_dashboard/services"
 
 	"github.com/labstack/echo/v4"
+	
 )
 
 func Init(e *echo.Echo) {
@@ -49,6 +50,9 @@ func Init(e *echo.Echo) {
 	adminGroup := e.Group("/admin")
 	adminGroup.Use(middleware.JWTMiddleware) // Protect all admin routes
 
+	// QR login: admin generates short-lived token
+	adminGroup.POST("/qr/generate", controllers.GenerateQRLogin)
+
 	adminGroup.POST("/devices", controllers.CreateDevice)
 	adminGroup.PUT("/devices/:dvid", controllers.UpdateDevice)
 	adminGroup.DELETE("/devices/:id", controllers.DeleteDevice)
@@ -85,20 +89,35 @@ func Init(e *echo.Echo) {
 	e.GET("/notifications", controllers.GetNotifications)
 	e.GET("/me", controllers.Me)
 
+    // 🔹 Places index (from sensor_data)
+    e.GET("/places", controllers.GetPlaces)
+
+	// 🔹 Pipeline controls (on-demand refresh)
+	e.GET("/pipeline/refresh", controllers.PipelineRefresh)
+
 	// 🔹 Air Quality Data Routes
 	airCtl := controllers.NewAirQualityController()
+	e.GET("/api/airquality/one_day", airCtl.GetOneDayDataHandler)
 	e.GET("/api/airquality/one_week", airCtl.GetOneWeekDataHandler)
 	e.GET("/api/airquality/one_month", airCtl.GetOneMonthDataHandler)
 	e.GET("/api/airquality/three_months", airCtl.GetThreeMonthsDataHandler)
 	e.GET("/api/airquality/one_year", airCtl.GetOneYearDataHandler)
-	e.GET("/api/airquality/province_average", airCtl.GetProvinceAveragePM25Handler)
+    e.GET("/api/airquality/province_average", airCtl.GetProvinceAveragePM25Handler)
 	e.GET("/api/airquality/sensor_data/week", airCtl.GetSensorData7DaysHandler)
+    // heat air quality data
+    e.GET("/api/airquality/one_year_series", controllers.GetAirQualityOneYearSeriesByAddress)
+    // Heatmap by province (province query param optional: if missing => aggregate all)
+    e.GET("/api/airquality/one_year_series_by_province", controllers.GetAirQualityOneYearSeriesByProvince)
 
 	// 🔹 Chart Data Route
 	chartDataController := controllers.NewChartDataController()
-	e.GET("/api/chartdata", chartDataController.GetChartDataHandler)
-	e.GET("/api/chartdata/today", chartDataController.GetTodayChartDataHandler)
+    e.GET("/api/chartdata", chartDataController.GetChartDataHandler)
+    e.GET("/api/chartdata/today", chartDataController.GetTodayChartDataHandler)
+    e.GET("/api/chartdata/heatmap_one_year", chartDataController.GetHeatmapOneYearHandler)
 
 	// 🔹 Get Latest Air Quality
 	e.GET("/api/airquality/latest", controllers.GetLatestAirQuality)
+
+	// Public QR consume endpoint (sets cookie then redirects to frontend)
+	e.GET("/qr/consume", controllers.ConsumeQRLogin)
 }

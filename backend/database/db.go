@@ -40,5 +40,16 @@ func Init() {
 	}
 
 	DB.AutoMigrate(&models.Notification{}, &models.User{}, &models.Sponsor{}, &models.SensorData{}, &models.APIResponse{}, &models.ChartData{}, models.DatasetChart{}, &models.Category{}, &models.News{}, &models.Device{}, &models.ColorRange{})
+	ensureIndexes(DB)
+
 	fmt.Println("Database connection successfully established and migrations applied")
+}
+
+func ensureIndexes(db *gorm.DB) {
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_sensor_data_timestamp ON sensor_data (timestamp)").Error; err != nil {
+		log.Printf("failed to create idx_sensor_data_timestamp: %v", err)
+	}
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_sensor_data_address ON sensor_data (address)").Error; err != nil {
+		log.Printf("failed to create idx_sensor_data_address: %v", err)
+	}
 }

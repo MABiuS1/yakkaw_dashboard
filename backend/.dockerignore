@@ -1,0 +1,9 @@
+.git
+.DS_Store
+bin
+tmp
+vendor
+*.log
+.env*
+docker-compose.yml
+frontend

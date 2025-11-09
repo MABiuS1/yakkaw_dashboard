@@ -18,7 +18,30 @@ Yakkaw Dashboard is a web-based dashboard application built using **Go (Echo Fra
 - **Docker** (optional, for deployment)
 - **Bun Migrations** for database schema management
 
-## Installation
+## Docker Setup
+You can run the complete stack (PostgreSQL, Go API, and Next.js frontend) with Docker. Each service has its own Dockerfile and a shared `docker-compose.yml`.
+
+### Build & Run Everything
+```sh
+docker compose up --build
+```
+This command will:
+- start PostgreSQL with default credentials (`yakkaw/yakkaw`)
+- build the backend image from `backend/Dockerfile` and expose it on `http://localhost:8080`
+- build the frontend image from `frontend/Dockerfile` (using Bun for install/build) and expose it on `http://localhost:3000`
+
+Feel free to override any environment variables in `docker-compose.yml` (e.g., database password, `API_URL`, or frontend `NEXT_PUBLIC_BACKEND_URL`).
+
+### Build Images Individually
+```sh
+# Backend (Echo + Go)
+docker build -t yakkaw-backend ./backend
+
+# Frontend (Next.js)
+docker build -t yakkaw-frontend ./frontend
+```
+
+## Manual Installation
 ### Prerequisites
 Make sure you have the following installed:
 - [Go](https://go.dev/dl/)
@@ -36,8 +59,8 @@ cd yakkaw-dashboard
 go mod tidy
 ```
 
-### Configure Environment Variables
-Create a `.env` file in the project root and set the following variables:
+### Configure Backend Environment Variables
+Create a `.env` file inside `backend/` (or export the variables in your shell) and set the following values:
 ```env
 DB_HOST=localhost
 DB_PORT=5432
@@ -45,6 +68,7 @@ DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=yakkaw_db
 SERVER_PORT=8080
+API_URL=https://yakkaw.mfu.ac.th/api/yakkaw/devices
 ```
 
 ### Run Database Migrations
@@ -57,6 +81,14 @@ go run cmd/migrate/main.go up
 go run main.go
 ```
 The server will be running at `http://localhost:8080`.
+
+### Frontend (Next.js + Bun)
+Inside the `frontend/` directory:
+```sh
+bun install
+bun run dev     # or bun run build && bun run start
+```
+If you prefer npm, you can still run `npm install` and `npm run dev`, but Docker images use Bun for faster installs and builds.
 
 ## API Endpoints
 ### Public Routes
@@ -78,12 +110,6 @@ The server will be running at `http://localhost:8080`.
 | POST   | `/admin/sponsors`           | Create a sponsor |
 | PUT    | `/admin/sponsors/:id`       | Update a sponsor |
 | DELETE | `/admin/sponsors/:id`       | Delete a sponsor |
-
-## Running with Docker (Optional)
-### Build and Run Docker Containers
-```sh
-docker-compose up --build
-```
 
 ## Contribution
 1. Fork the repository

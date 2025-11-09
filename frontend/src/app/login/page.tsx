@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import qs from 'qs';
@@ -32,7 +32,7 @@ const LoginPage = () => {
     }
   }, []);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -53,7 +53,7 @@ const LoginPage = () => {
     return true;
   };
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   
     if (!validateForm()) return;
@@ -90,12 +90,12 @@ const LoginPage = () => {
       }
       
       router.push('/dashboard');
-    } catch (err) {
+    } catch (error) {
       setLoginAttempts(prev => prev + 1);
-      setError(
-        err.response?.data?.message ||
-        'Failed to login. Please check your credentials and try again.'
-      );
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : 'Failed to login. Please check your credentials and try again.';
+      setError(message || 'Failed to login. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }

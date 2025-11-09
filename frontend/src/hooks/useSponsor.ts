@@ -39,7 +39,7 @@ export const useSponsors = () => {
       const data = await response.json();
       setSponsors(data || []);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     } finally {
       setIsLoading(false);
     }

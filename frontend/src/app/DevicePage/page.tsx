@@ -59,7 +59,7 @@ const DevicePage: React.FC = () => {
               className="bg-blue-500 hover:bg-blue-700"
               onClick={() => {
                 setCurrentDevice({
-                  id: 0,
+                  ID: undefined,
                   dvid: "",
                   address: "",
                   longitude: 0,
@@ -111,7 +111,7 @@ const DevicePage: React.FC = () => {
                   ) : (
                     devices.map((device, index) => (
                       <motion.tr
-                        key={device.id ?? `device-${index}`}
+                        key={device.ID ?? `device-${index}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -141,11 +141,11 @@ const DevicePage: React.FC = () => {
                           <Button
                             className="bg-red-500 hover:bg-red-600 text-white text-xs"
                             onClick={() => {
-                              if (device.ID) {
+                              if (typeof device.ID === "number") {
                                 setDeviceToDelete(device.ID);
                                 setIsConfirmDialogOpen(true);
                               } else {
-                                console.error("Device DVID is undefined.");
+                                console.error("Device ID is undefined.");
                               }
                             }}
                           >

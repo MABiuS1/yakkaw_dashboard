@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
-interface ColorRange {
-  ID: number;
-  Min: number;
-  Max: number;
-  Color: string;
-}
+import type { ColorRange } from "@/constant/colorRangeData";
 
 export const useColorRanges = () => {
   const [colorRanges, setColorRanges] = useState<ColorRange[]>([]);
@@ -24,7 +18,7 @@ export const useColorRanges = () => {
       setIsLoading(true);
       const response = await axios.get("http://localhost:8080/colorranges");
       if (response.status !== 200 && response.status !== 201) throw new Error("Failed to fetch color ranges");
-      setColorRanges(response.data || []);
+      setColorRanges((response.data || []) as ColorRange[]);
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message);
     } finally {
@@ -51,14 +45,12 @@ export const useColorRanges = () => {
     }
   };
 
-  
-  const handleUpdate = async (e: React.FormEvent) => {
-   
-    if (!currentColorRange || !currentColorRange.ID) return;
+  const handleUpdate = async (colorRange: ColorRange) => {
+    if (!colorRange || !colorRange.ID) return;
     try {
       const response = await axios.put(
-        `http://localhost:8080/admin/colorranges/${currentColorRange.ID}`,
-        currentColorRange,
+        `http://localhost:8080/admin/colorranges/${colorRange.ID}`,
+        colorRange,
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,

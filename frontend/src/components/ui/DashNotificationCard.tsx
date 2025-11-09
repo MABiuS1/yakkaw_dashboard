@@ -1,9 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell} from 'lucide-react';
+import { Bell } from 'lucide-react';
+import { Notification } from '@/constant/notificationData';
 
-const DashNotificationCard = ({ notification }) => {
+type DashNotificationCardProps = {
+  notification: Notification;
+};
+
+const DashNotificationCard: React.FC<DashNotificationCardProps> = ({ notification }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => {

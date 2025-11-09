@@ -69,12 +69,6 @@ const LoginPage = () => {
     setError('');
   
     try {
-      console.log("[Login] submitting", {
-        endpoint: `${API_BASE_URL}/login`,
-        username: formData.username.trim(),
-        hasPassword: Boolean(formData.password),
-      });
-
       const response = await axios.post(
         `${API_BASE_URL}/login`,
         qs.stringify({

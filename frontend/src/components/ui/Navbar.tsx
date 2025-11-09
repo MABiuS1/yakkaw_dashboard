@@ -61,7 +61,7 @@ const Navbar = () => {
         { href: "/sponsor", icon: Gift, label: "Sponsor" },
         { href: "/news", icon: Newspaper, label: "News" },
         { href: "/categories", icon: FolderOpen, label: "Categories" },
-        { href: "/ColorRangeePage", icon: FolderOpen, label: "ColorRange" },
+        { href: "/ColorRangePage", icon: FolderOpen, label: "ColorRange" },
         { href: "/DevicePage", icon: FolderOpen, label: "DevicePage" },
 
 

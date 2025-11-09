@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from "react";
 import { News, Category } from "@/constant/newsData";
-import { API_BASE_URL } from "@/lib/env";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 export const useNews = () => {
   const [categories, setCategories] = useState<Category[]>([]); // ✅ เก็บรายการหมวดหมู่

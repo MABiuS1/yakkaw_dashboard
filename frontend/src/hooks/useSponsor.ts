@@ -2,7 +2,8 @@
 'use client'
 import { useState, useEffect } from "react";
 import { Sponsor } from "@/constant/sponsorData";
-import { API_BASE_URL } from "@/lib/env";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 export const useSponsors = () => {
   const [filteredSponsors, setFilteredSponsors] = useState<Sponsor[]>([]);

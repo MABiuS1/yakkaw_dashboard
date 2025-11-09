@@ -21,7 +21,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { API_BASE_URL } from "@/lib/env";
 
 // Function to get cookie value
 const getCookie = (name: string) => {
@@ -41,7 +40,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/logout`, {
+      const res = await fetch("http://localhost:8080/logout", {
         method: "POST",
         credentials: "include",
       });

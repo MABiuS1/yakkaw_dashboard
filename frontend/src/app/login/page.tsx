@@ -69,6 +69,12 @@ const LoginPage = () => {
     setError('');
   
     try {
+      console.log("[Login] submitting", {
+        endpoint: `${API_BASE_URL}/login`,
+        username: formData.username.trim(),
+        hasPassword: Boolean(formData.password),
+      });
+
       const response = await axios.post(
         `${API_BASE_URL}/login`,
         qs.stringify({
@@ -91,9 +97,23 @@ const LoginPage = () => {
         localStorage.removeItem('rememberedUsername');
       }
       
+      console.log("[Login] success", {
+        status: response.status,
+        destination: "/dashboard",
+      });
       router.push('/dashboard');
     } catch (error) {
       setLoginAttempts(prev => prev + 1);
+      if (axios.isAxiosError(error)) {
+        console.error("[Login] failed", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+          configUrl: error.config?.url,
+        });
+      } else {
+        console.error("[Login] failed (unknown)", error);
+      }
       const message = axios.isAxiosError(error)
         ? error.response?.data?.message || error.message
         : 'Failed to login. Please check your credentials and try again.';

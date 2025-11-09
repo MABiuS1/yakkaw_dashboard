@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Notification } from "@/constant/notificationData";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+
 export const useNotifications = () => {
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,7 +24,7 @@ export const useNotifications = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("http://localhost:8080/me", { credentials: "include" });
+      const response = await fetch(`${API_BASE_URL}/me`, { credentials: "include" });
       if (!response.ok) throw new Error("Unauthorized");
     } catch (err) {
       window.location.href = "/login";
@@ -32,7 +34,7 @@ export const useNotifications = () => {
   const fetchNotifications = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:8080/notifications", { credentials: "include" });
+      const response = await fetch(`${API_BASE_URL}/notifications`, { credentials: "include" });
       if (!response.ok) throw new Error("Failed to fetch notifications");
       const data: Notification[] = await response.json();
       setNotifications(data || []);
@@ -46,7 +48,7 @@ export const useNotifications = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/admin/notifications", {
+      const response = await fetch(`${API_BASE_URL}/admin/notifications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -65,7 +67,7 @@ export const useNotifications = () => {
     e.preventDefault();
     if (!currentNotification.id) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/notifications/${currentNotification.id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/notifications/${currentNotification.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -83,7 +85,7 @@ export const useNotifications = () => {
   const handleDelete = async () => {
     if (!notificationToDelete) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/notifications/${notificationToDelete}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/notifications/${notificationToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });

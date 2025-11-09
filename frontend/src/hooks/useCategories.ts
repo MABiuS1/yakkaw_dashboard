@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Category } from "@/constant/categoryData";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+
 export const useCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -19,7 +21,7 @@ export const useCategories = () => {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:8080/categories");
+      const response = await fetch(`${API_BASE_URL}/categories`);
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
       setCategories(data || []);
@@ -33,7 +35,7 @@ export const useCategories = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/admin/categories", {
+      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -54,7 +56,7 @@ export const useCategories = () => {
     e.preventDefault();
     if (!currentCategory.id) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/categories/${currentCategory.id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${currentCategory.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -74,7 +76,7 @@ export const useCategories = () => {
   const handleDelete = async () => {
     if (!categoryToDelete) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/categories/${categoryToDelete}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${categoryToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });

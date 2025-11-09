@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Sponsor } from "@/constant/sponsorData";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+
 export const useSponsors = () => {
   const [filteredSponsors, setFilteredSponsors] = useState<Sponsor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,7 +24,7 @@ export const useSponsors = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("http://localhost:8080/me", { credentials: "include" });
+      const response = await fetch(`${API_BASE_URL}/me`, { credentials: "include" });
       if (!response.ok) throw new Error("Unauthorized");
     } catch (err) {
       window.location.href = "/login";
@@ -32,7 +34,7 @@ export const useSponsors = () => {
   const fetchSponsors = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:8080/sponsors", {
+      const response = await fetch(`${API_BASE_URL}/sponsors`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch sponsors");
@@ -48,7 +50,7 @@ export const useSponsors = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8080/admin/sponsors", {
+      const response = await fetch(`${API_BASE_URL}/admin/sponsors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -67,7 +69,7 @@ export const useSponsors = () => {
     e.preventDefault();
     if (!currentSponsor.id) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/sponsors/${currentSponsor.id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/sponsors/${currentSponsor.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -85,7 +87,7 @@ export const useSponsors = () => {
   const handleDelete = async () => {
     if (!sponsorsToDelete) return;
     try {
-      const response = await fetch(`http://localhost:8080/admin/sponsors/${sponsorsToDelete}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/sponsors/${sponsorsToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });

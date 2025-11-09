@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { News, Category } from "@/constant/newsData";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+
 export const useNews = () => {
   const [categories, setCategories] = useState<Category[]>([]); // ✅ เก็บรายการหมวดหมู่
   const [filteredNews, setFilteredNews] = useState<News[]>([]);
@@ -26,7 +28,7 @@ export const useNews = () => {
   // ✅ ฟังก์ชันดึง Categories จาก API
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:8080/categories");
+      const response = await fetch(`${API_BASE_URL}/categories`);
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
       setCategories(data || []);
@@ -37,7 +39,7 @@ export const useNews = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("http://localhost:8080/me", { credentials: "include" });
+      const response = await fetch(`${API_BASE_URL}/me`, { credentials: "include" });
       if (!response.ok) throw new Error("Unauthorized");
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
@@ -48,7 +50,7 @@ export const useNews = () => {
   const fetchNews = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:8080/news", { credentials: "include" });
+      const response = await fetch(`${API_BASE_URL}/news`, { credentials: "include" });
       if (!response.ok) throw new Error("Failed to fetch news");
       const data = await response.json();
       setNews(data || []);
@@ -65,7 +67,7 @@ export const useNews = () => {
     console.log("Sending News Data:", currentNews); // ✅ Debug ดูค่าข้อมูลที่ส่ง
   
     try {
-      const response = await fetch("http://localhost:8080/admin/news", {
+      const response = await fetch(`${API_BASE_URL}/admin/news`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -96,7 +98,7 @@ export const useNews = () => {
     if (!currentNews.id) return;
   
     try {
-      const response = await fetch(`http://localhost:8080/admin/news/${currentNews.id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/news/${currentNews.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -122,7 +124,7 @@ export const useNews = () => {
     if (!newsToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/admin/news/${newsToDelete}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/news/${newsToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });

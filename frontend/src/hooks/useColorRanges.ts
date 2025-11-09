@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import type { ColorRange } from "@/constant/colorRangeData";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+
 export const useColorRanges = () => {
   const [colorRanges, setColorRanges] = useState<ColorRange[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -16,7 +18,7 @@ export const useColorRanges = () => {
   const fetchColorRanges = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get("http://localhost:8080/colorranges");
+      const response = await axios.get(`${API_BASE_URL}/colorranges`);
       if (response.status !== 200 && response.status !== 201) throw new Error("Failed to fetch color ranges");
       setColorRanges((response.data || []) as ColorRange[]);
     } catch (err: any) {
@@ -29,7 +31,7 @@ export const useColorRanges = () => {
   const handleCreate = async (colorRange: ColorRange) => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/admin/colorranges",
+        `${API_BASE_URL}/admin/colorranges`,
         colorRange,
         {
           headers: { "Content-Type": "application/json" },
@@ -49,7 +51,7 @@ export const useColorRanges = () => {
     if (!colorRange || !colorRange.ID) return;
     try {
       const response = await axios.put(
-        `http://localhost:8080/admin/colorranges/${colorRange.ID}`,
+        `${API_BASE_URL}/admin/colorranges/${colorRange.ID}`,
         colorRange,
         {
           headers: { "Content-Type": "application/json" },
@@ -69,7 +71,7 @@ export const useColorRanges = () => {
     if (!colorRangeToDelete) return;
     try {
       const response = await axios.delete(
-        `http://localhost:8080/admin/colorranges/${colorRangeToDelete}`,
+        `${API_BASE_URL}/admin/colorranges/${colorRangeToDelete}`,
         {
           withCredentials: true,
         }

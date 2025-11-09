@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"net/http"
+	"os"
+	"strings"
 	"time"
 	"yakkaw_dashboard/database"
 	"yakkaw_dashboard/models"
@@ -13,20 +15,48 @@ import (
 
 var jwtSecret = []byte("your-secret-key")
 
+func shouldUseSecureCookie(c echo.Context) bool {
+	if c.Request().TLS != nil || strings.EqualFold(c.Scheme(), "https") {
+		return true
+	}
+
+	env := os.Getenv("APP_ENV")
+	return strings.EqualFold(env, "production")
+}
+
 // Login - Handle user login by verifying password from the database
 // Login - Handle user login by verifying password from the database
 func Login(c echo.Context) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
+	type loginRequest struct {
+		Username string `json:"username" form:"username"`
+		Password string `json:"password" form:"password"`
+	}
+
+	payload := loginRequest{
+		Username: c.FormValue("username"),
+		Password: c.FormValue("password"),
+	}
+
+	if payload.Username == "" || payload.Password == "" {
+		if err := c.Bind(&payload); err != nil {
+			return c.JSON(http.StatusBadRequest, "Invalid login payload")
+		}
+	}
+
+	payload.Username = strings.TrimSpace(payload.Username)
+
+	if payload.Username == "" || payload.Password == "" {
+		return c.JSON(http.StatusBadRequest, "Username and password are required")
+	}
 
 	// Find user in the database
 	var user models.User
-	if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
+	if err := database.DB.Where("username = ?", payload.Username).First(&user).Error; err != nil {
 		return c.JSON(http.StatusUnauthorized, "Invalid username or password")
 	}
 
 	// Compare password with the hash in the database
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
 		return c.JSON(http.StatusUnauthorized, "Invalid username or password")
 	}
 
@@ -49,7 +79,7 @@ func Login(c echo.Context) error {
 	cookie.Name = "access_token"
 	cookie.Value = tokenString
 	cookie.HttpOnly = true
-	cookie.Secure = true 
+	cookie.Secure = shouldUseSecureCookie(c)
 	cookie.Path = "/"
 	cookie.Expires = time.Now().Add(time.Hour * 2)
 	c.SetCookie(cookie)
@@ -63,7 +93,7 @@ func Logout(c echo.Context) error {
 	cookie.Name = "access_token"
 	cookie.Value = ""
 	cookie.HttpOnly = true
-	cookie.Secure = true  // ต้องใช้ HTTPS
+	cookie.Secure = shouldUseSecureCookie(c) // ต้องใช้ HTTPS
 	cookie.Path = "/"
 	cookie.Expires = time.Unix(0, 0) // หมดอายุทันที
 	cookie.MaxAge = -1               // บังคับให้ลบ
@@ -71,7 +101,6 @@ func Logout(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Logged out successfully"})
 }
-
 
 // Register - Creates a new user
 func Register(c echo.Context) error {

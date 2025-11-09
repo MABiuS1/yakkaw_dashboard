@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -16,6 +17,34 @@ import (
 var jwtSecret = []byte("your-secret-key")
 
 func shouldUseSecureCookie(c echo.Context) bool {
+	if proto := c.Request().Header.Get("X-Forwarded-Proto"); proto != "" {
+		return strings.EqualFold(proto, "https")
+	}
+
+	if forwarded := c.Request().Header.Get("Forwarded"); forwarded != "" {
+		for _, part := range strings.Split(forwarded, ";") {
+			if strings.EqualFold(strings.TrimSpace(part), "proto=https") {
+				return true
+			}
+			if strings.EqualFold(strings.TrimSpace(part), "proto=http") {
+				return false
+			}
+		}
+	}
+
+	for _, header := range []string{echo.HeaderOrigin, echo.HeaderReferer} {
+		if raw := c.Request().Header.Get(header); raw != "" {
+			if u, err := url.Parse(raw); err == nil {
+				if strings.EqualFold(u.Scheme, "https") {
+					return true
+				}
+				if strings.EqualFold(u.Scheme, "http") {
+					return false
+				}
+			}
+		}
+	}
+
 	if c.Request().TLS != nil || strings.EqualFold(c.Scheme(), "https") {
 		return true
 	}

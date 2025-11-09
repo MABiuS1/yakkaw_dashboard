@@ -8,7 +8,7 @@ interface DashNewsCardProps {
   news: News;
 }
 
-const DashNewsCard: React.FC<DashNewsCardProps> = ({ news }) => {
+const DashNewsCard = ({ news }:DashNewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => {

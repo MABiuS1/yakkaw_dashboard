@@ -1,14 +1,31 @@
 package routes
 
 import (
-	"github.com/labstack/echo/v4"
 	"yakkaw_dashboard/controllers"
 	"yakkaw_dashboard/database"
 	"yakkaw_dashboard/middleware"
 	"yakkaw_dashboard/services"
+
+	"github.com/labstack/echo/v4"
 )
 
 func Init(e *echo.Echo) {
+
+	ctrl := new(controllers.ColorRangeController)
+
+	e.GET("/colorranges", ctrl.GetAll)
+	e.GET("/colorranges/:id", ctrl.GetByID)
+
+	// Devices (READ public, WRITE admin)
+
+	// Admin-only: Manage Devices & ColorRanges
+	// adminGroup := e.Group("/admin")
+	// adminGroup.Use(middleware.JWTMiddleware)
+
+	//Devices
+	e.GET("/devices", controllers.GetAllDevices)
+	e.GET("/devices/:dvid", controllers.GetDevice)
+
 	// 🔹 Public Authentication Routes
 	e.POST("/register", controllers.Register)
 	e.POST("/login", controllers.Login)
@@ -31,6 +48,14 @@ func Init(e *echo.Echo) {
 	// 🔹 Protected Admin Routes
 	adminGroup := e.Group("/admin")
 	adminGroup.Use(middleware.JWTMiddleware) // Protect all admin routes
+
+	adminGroup.POST("/devices", controllers.CreateDevice)
+	adminGroup.PUT("/devices/:dvid", controllers.UpdateDevice)
+	adminGroup.DELETE("/devices/:id", controllers.DeleteDevice)
+
+	adminGroup.POST("/colorranges", ctrl.Create)
+	adminGroup.PUT("/colorranges/:id", ctrl.Update)
+	adminGroup.DELETE("/colorranges/:id", ctrl.Delete)
 
 	// ✅ Admin-only: Manage Categories
 	adminGroup.POST("/categories", categoryController.CreateCategory)
@@ -66,10 +91,13 @@ func Init(e *echo.Echo) {
 	e.GET("/api/airquality/one_month", airCtl.GetOneMonthDataHandler)
 	e.GET("/api/airquality/three_months", airCtl.GetThreeMonthsDataHandler)
 	e.GET("/api/airquality/one_year", airCtl.GetOneYearDataHandler)
+	e.GET("/api/airquality/province_average", airCtl.GetProvinceAveragePM25Handler)
+	e.GET("/api/airquality/sensor_data/week", airCtl.GetSensorData7DaysHandler)
 
 	// 🔹 Chart Data Route
 	chartDataController := controllers.NewChartDataController()
 	e.GET("/api/chartdata", chartDataController.GetChartDataHandler)
+	e.GET("/api/chartdata/today", chartDataController.GetTodayChartDataHandler)
 
 	// 🔹 Get Latest Air Quality
 	e.GET("/api/airquality/latest", controllers.GetLatestAirQuality)

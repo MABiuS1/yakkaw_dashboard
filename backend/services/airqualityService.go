@@ -218,3 +218,69 @@ func queryAirQuality(query string) ([]map[string]interface{}, error) {
 
 	return results, nil
 }
+
+// GetProvinceAveragePM25 คำนวณค่าเฉลี่ย PM2.5 ของแต่ละจังหวัด
+func GetProvinceAveragePM25() ([]map[string]interface{}, error) {
+	query := `
+        WITH province_data AS (
+            SELECT 
+                split_part(address, ' ', array_length(string_to_array(address, ' '), 1)) as province,
+                pm25
+            FROM sensor_data
+            WHERE to_timestamp(timestamp/1000) BETWEEN now() - interval '24 hours' AND now()
+        )
+        SELECT 
+            province,
+            ROUND(AVG(pm25)::numeric, 2) as avg_pm25,
+            COUNT(*) as station_count
+        FROM province_data
+        WHERE province != ''
+        GROUP BY province
+        ORDER BY avg_pm25 DESC
+    `
+
+	rows, err := database.DB.Raw(query).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := []map[string]interface{}{}
+
+	for rows.Next() {
+		var province string
+		var avgPM25 float64
+		var stationCount int
+
+		if err := rows.Scan(&province, &avgPM25, &stationCount); err != nil {
+			return nil, err
+		}
+
+		data := map[string]interface{}{
+			"province":      province,
+			"avg_pm25":      avgPM25,
+			"station_count": stationCount,
+		}
+		results = append(results, data)
+	}
+
+	return results, nil
+}
+
+// GetSensorData7Days ดึงข้อมูล sensor_data ย้อนหลัง 7 วัน
+func GetSensorData7Days() ([]models.SensorData, error) {
+	var sensorData []models.SensorData
+
+	query := `
+		SELECT *
+		FROM sensor_data
+		WHERE to_timestamp(timestamp/1000) BETWEEN now() - interval '7 days' AND now()
+		ORDER BY timestamp DESC
+	`
+
+	if err := database.DB.Raw(query).Scan(&sensorData).Error; err != nil {
+		return nil, err
+	}
+
+	return sensorData, nil
+}

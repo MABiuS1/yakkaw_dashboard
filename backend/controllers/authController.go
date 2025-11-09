@@ -32,7 +32,7 @@ func shouldUseSecureCookie(c echo.Context) bool {
 		}
 	}
 
-	for _, header := range []string{echo.HeaderOrigin, echo.HeaderReferer} {
+	for _, header := range []string{echo.HeaderOrigin, "Referer"} {
 		if raw := c.Request().Header.Get(header); raw != "" {
 			if u, err := url.Parse(raw); err == nil {
 				if strings.EqualFold(u.Scheme, "https") {

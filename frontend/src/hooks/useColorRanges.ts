@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import type { ColorRange } from "@/constant/colorRangeData";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
 export const useColorRanges = () => {
   const [colorRanges, setColorRanges] = useState<ColorRange[]>([]);

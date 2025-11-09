@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Notification } from "@/constant/notificationData";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
 export const useNotifications = () => {
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);

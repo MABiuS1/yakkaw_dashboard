@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Iridescence from '@/components/Iridescence';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
+
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -35,7 +37,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

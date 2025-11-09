@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { News, Category } from "@/constant/newsData";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
 export const useNews = () => {
   const [categories, setCategories] = useState<Category[]>([]); // ✅ เก็บรายการหมวดหมู่

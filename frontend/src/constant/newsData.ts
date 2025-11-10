@@ -6,6 +6,7 @@ export type News = {
     url: string;
     date: string;
     category_id: string;
+    category?: Category | null;
   };  
   
   
@@ -26,9 +27,8 @@ export type News = {
     onOpenChange: (open: boolean) => void;
     onSubmit: (e: React.FormEvent) => void;
     news: News;
-    setNews: (news: News) => void;
+    setNews: React.Dispatch<React.SetStateAction<News>>;
     categories: Category[]; // ✅ เพิ่ม categories ที่จะใช้ใน Dropdown
     title: string;
     submitButtonText: string;
   };
-

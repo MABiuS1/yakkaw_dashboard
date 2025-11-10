@@ -3,6 +3,15 @@ export type Sponsor = {
     name: string;
     description: string;
     logo: string;
+    category?: string;
+    time?: string;
+  }
+
+export type SponsorForm = {
+    name: string;
+    description: string;
+    logo: string;
+    category: string;
   }
 
 export type SponsorFormDialogProps = {
@@ -26,12 +35,14 @@ export type SponsorFormDialogProps = {
   }
 
 export type SponsorsCardProps = {
-    Sponsors: {
-      id: string | null;
-      name: string;
-      description: string;
-      logo: string;
-    };
+    Sponsors: Sponsor;
     onEdit: () => void;
     onDelete: () => void;
+  }
+
+export type SponsorCardProps = {
+    sponsor: Sponsor;
+    onEdit: () => void;
+    onDelete: () => void;
+    onView?: () => void;
   }

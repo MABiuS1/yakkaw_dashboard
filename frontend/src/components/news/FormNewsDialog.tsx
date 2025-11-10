@@ -4,11 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { NewsFormDialogProps } from "@/constant/newsData";
-import type { Category } from "@/constant/categoryData";
-
-type Props = NewsFormDialogProps & {
-  categories: Category[];
-};
 
 // --- Time helpers: แสดงเป็น local ใน input, เก็บเป็น ISO (UTC) ---
 function toDatetimeLocalValue(iso?: string) {
@@ -28,12 +23,12 @@ export function NewsFormDialog({
   isOpen,
   onOpenChange,
   onSubmit,
-  form,
-  setForm,
+  news,
+  setNews,
   categories,
   title,
   submitButtonText,
-}: Props) {
+}: NewsFormDialogProps) {
   const titleId = useId();
   const descId = useId();
   const imageId = useId();
@@ -42,17 +37,17 @@ export function NewsFormDialog({
   const dateId = useId();
 
   const [fullScreen, setFullScreen] = React.useState(false);
-  const remaining = MAX_DESC - (form.description?.length ?? 0);
+  const remaining = MAX_DESC - (news.description?.length ?? 0);
 
   const resetAndClose = () => {
-    setForm((s) => ({
+    setNews((s) => ({
       ...s,
       title: "",
       description: "",
       image: "",
       url: "",
       date: "",
-      category_id: 0,
+      category_id: "",
     }));
     setFullScreen(false);
     onOpenChange(false);
@@ -60,14 +55,14 @@ export function NewsFormDialog({
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setForm((s) => ({
+      setNews((s) => ({
         ...s,
         title: "",
         description: "",
         image: "",
         url: "",
         date: "",
-        category_id: 0,
+        category_id: "",
       }));
       setFullScreen(false);
     }
@@ -99,8 +94,8 @@ export function NewsFormDialog({
             <Input
               id={titleId}
               placeholder="Title"
-              value={form.title}
-              onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
+              value={news.title}
+              onChange={(e) => setNews((s) => ({ ...s, title: e.target.value }))}
               required
               className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
             />
@@ -112,7 +107,7 @@ export function NewsFormDialog({
               <label htmlFor={descId} className="text-sm text-purple-700">Description</label>
               <div className="flex items-center gap-2">
                 <span className={`text-xs ${remaining < 0 ? "text-red-600" : "text-purple-500"}`}>
-                  {(form.description?.length ?? 0)}/{MAX_DESC}
+                  {(news.description?.length ?? 0)}/{MAX_DESC}
                 </span>
                 <Button type="button" variant="outline" size="sm" onClick={() => setFullScreen((v) => !v)}>
                   {fullScreen ? "Minimize" : "Full Screen"}
@@ -123,8 +118,8 @@ export function NewsFormDialog({
               <Textarea
                 id={descId}
                 placeholder="Description"
-                value={form.description}
-                onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
+                value={news.description}
+                onChange={(e) => setNews((s) => ({ ...s, description: e.target.value }))}
                 required
                 maxLength={MAX_DESC}
                 className={[
@@ -142,8 +137,8 @@ export function NewsFormDialog({
             <Input
               id={imageId}
               placeholder="https://example.com/image.jpg"
-              value={form.image}
-              onChange={(e) => setForm((s) => ({ ...s, image: e.target.value }))}
+              value={news.image}
+              onChange={(e) => setNews((s) => ({ ...s, image: e.target.value }))}
               required
               className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
             />
@@ -155,8 +150,8 @@ export function NewsFormDialog({
             <Input
               id={urlId}
               placeholder="https://example.com/article"
-              value={form.url}
-              onChange={(e) => setForm((s) => ({ ...s, url: e.target.value }))}
+              value={news.url}
+              onChange={(e) => setNews((s) => ({ ...s, url: e.target.value }))}
               required
               className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
             />
@@ -167,14 +162,14 @@ export function NewsFormDialog({
             <label htmlFor={categoryId} className="text-sm text-purple-700">Category</label>
             <select
               id={categoryId}
-              value={form.category_id}
-              onChange={(e) => setForm((s) => ({ ...s, category_id: Number(e.target.value) }))}
+              value={news.category_id ?? ""}
+              onChange={(e) => setNews((s) => ({ ...s, category_id: e.target.value }))}
               required
               className="w-full px-3 py-2 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
             >
-              <option value={0}>Select Category</option>
+              <option value="">Select Category</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={String(c.id)}>{c.name}</option>
               ))}
             </select>
           </div>
@@ -185,8 +180,8 @@ export function NewsFormDialog({
             <Input
               id={dateId}
               type="datetime-local"
-              value={toDatetimeLocalValue(form.date)}
-              onChange={(e) => setForm((s) => ({ ...s, date: fromDatetimeLocalValue(e.target.value) }))}
+              value={toDatetimeLocalValue(news.date)}
+              onChange={(e) => setNews((s) => ({ ...s, date: fromDatetimeLocalValue(e.target.value) }))}
               className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
             />
           </div>

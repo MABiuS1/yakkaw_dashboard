@@ -3,35 +3,23 @@ export type Notification = {
     title: string;
     message: string;
     icon: string;
+    category?: string;
+    time?: string;
   }
 
 export type FormDialogProps = {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (e: React.FormEvent) => void;
-    notification: {
-      id: string | null;
-      title: string;
-      message: string;
-      icon: string;
-    };
-    setNotification: (notification: {
-      id: string | null;
-      title: string;
-      message: string;
-      icon: string;
-    }) => void;
+    notification: Notification;
+    setNotification: React.Dispatch<React.SetStateAction<Notification>>;
     title: string;
     submitButtonText: string;
   }
 
 export type NotificationCardProps = {
-    notification: {
-      id: string | null;
-      title: string;
-      message: string;
-      icon: string;
-    };
+    notification: Notification;
     onEdit: () => void;
     onDelete: () => void;
+    onView?: () => void;
   }

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Gift, ArrowLeft } from "lucide-react";
 import { useSponsors } from "@/hooks/useSponsor";
 import Navbar from "@/components/ui/Navbar";
-import DashSponsorCard from "@/components/ui/DashSponsorsCard";
+import DashSponsorCard from "@/components/sponsors/DashSponsorsCard";
 import Link from "next/link";
 
 const SponsorsPage: React.FC = () => {

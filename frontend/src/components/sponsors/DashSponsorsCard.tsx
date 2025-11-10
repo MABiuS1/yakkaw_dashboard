@@ -2,9 +2,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
-import type { SponsorCardProps } from '@/constant/sponsorData';
+import type { Sponsor } from '@/constant/sponsorData';
 
-const DashSponsorCard = ({ sponsor }:SponsorCardProps) => {
+type DashSponsorCardProps = {
+  sponsor: Sponsor;
+};
+
+const DashSponsorCard = ({ sponsor }:DashSponsorCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => {

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FolderOpen, ArrowLeft } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import Navbar from "@/components/ui/Navbar";
-import DashCategoryCard from "@/components/ui/DashCategoryCard";
+import DashCategoryCard from "@/components/categories/DashCategoryCard";
 import Link from "next/link";
 
 const CategoriesPage: React.FC = () => {

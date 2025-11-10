@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bell, ArrowLeft } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotification";
 import Navbar from "@/components/ui/Navbar";
-import DashNotificationCard from "@/components/ui/DashNotificationCard";
+import DashNotificationCard from "@/components/notifications/DashNotificationCard";
 import Link from "next/link";
 
 const NotificationsPage: React.FC = () => {

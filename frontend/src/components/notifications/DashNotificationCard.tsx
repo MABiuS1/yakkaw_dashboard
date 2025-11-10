@@ -2,9 +2,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell} from 'lucide-react';
-import { NotificationCardProps } from '@/constant/notificationData';
+import type { Notification } from '@/constant/notificationData';
 
-const DashNotificationCard = ({ notification }:NotificationCardProps) => {
+type DashNotificationCardProps = {
+  notification: Notification;
+};
+
+const DashNotificationCard = ({ notification }:DashNotificationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => {

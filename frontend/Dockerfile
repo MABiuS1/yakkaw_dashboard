@@ -4,7 +4,7 @@ FROM oven/bun:1.1.26-alpine AS deps
 WORKDIR /app
 
 COPY bun.lockb bun.lock package*.json ./
-RUN bun install --frozen-lockfile
+RUN bun install 
 
 FROM deps AS builder
 WORKDIR /app

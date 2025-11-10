@@ -2,8 +2,6 @@
 import { NextRequest } from "next/server";
 import { decode } from "jsonwebtoken";
 
-type StockUser = Record<string, unknown>;
-
 export const getToken = (): string | null => {
   return localStorage.getItem("token");
 };

@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { Device } from "@/constant/deviceData";
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
-
 export const useDevices = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -17,7 +15,7 @@ export const useDevices = () => {
   const fetchDevices = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/devices`);
+      const response = await fetch("http://localhost:8080/devices");
       if (!response.ok) throw new Error("อ้าย ๆ มันโหลดบ่ด้าย");
       const data = await response.json();
       setDevices(data || []);
@@ -31,7 +29,7 @@ export const useDevices = () => {
 
   const handleCreate = async (device: Device) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/devices`, {
+      const response = await fetch("http://localhost:8080/admin/devices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -51,7 +49,7 @@ export const useDevices = () => {
     if (!device || !device.dvid) return;
     try {
       await axios.put(
-        `${API_BASE_URL}/admin/devices/${device.dvid}`,
+        `http://localhost:8080/admin/devices/${device.dvid}`,
         device,
         {
           headers: { "Content-Type": "application/json" },
@@ -70,7 +68,7 @@ export const useDevices = () => {
   const handleDelete = async () => {
     if (!deviceToDelete) return;
     try {
-      await axios.delete(`${API_BASE_URL}/admin/devices/${deviceToDelete}`, {
+      await axios.delete(`http://localhost:8080/admin/devices/${deviceToDelete}`, {
         withCredentials: true,
       });
       await fetchDevices();

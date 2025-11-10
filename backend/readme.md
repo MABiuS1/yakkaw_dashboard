@@ -39,7 +39,6 @@ go mod tidy
 ### Configure Environment Variables
 Create a `.env` file in the project root and set the following variables:
 ```env
-DATABASE_PUBLIC_URL=postgres://your_user:your_password@localhost:5432/yakkaw_db?sslmode=disable
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=your_user
@@ -47,7 +46,6 @@ DB_PASSWORD=your_password
 DB_NAME=yakkaw_db
 SERVER_PORT=8080
 ```
-`DATABASE_PUBLIC_URL` is the preferred single variable for deployments (Railway, Supabase, etc). When it is present it overrides the individual `DB_*` settings, which are still read as a fallback for local development.
 
 ### Run Database Migrations
 ```sh

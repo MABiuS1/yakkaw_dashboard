@@ -9,8 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
-
 const getCookie = (name: string) => {
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
   return match ? decodeURIComponent(match[2]) : null;
@@ -45,7 +43,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/logout`, {
+      const res = await fetch("http://localhost:8080/logout", {
         method: "POST",
         credentials: "include",
       });

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import type { Sponsor, SponsorForm } from "@/constant/sponsorData";
 
 const EMPTY_FORM: SponsorForm = { name: "", logo: "", description: "", category: "" };
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api` : '/api';
+const API = "http://localhost:8080";
 
 export const useSponsors = () => {
   // ---------------- state: data ----------------

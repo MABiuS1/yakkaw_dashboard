@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import type { News, NewsForm } from "@/constant/newsData";
 import type { Category } from "@/constant/categoryData";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api` : '/api';
+const API = "http://localhost:8080";
+
 const EMPTY_FORM: NewsForm = {
   title: "",
   description: "",

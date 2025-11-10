@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import type { ColorRange } from "@/constant/colorRangeData";
 
-interface ColorRange {
-  ID: number;
-  Min: number;
-  Max: number;
-  Color: string;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
 export const useColorRanges = () => {
   const [colorRanges, setColorRanges] = useState<ColorRange[]>([]);
@@ -22,9 +18,9 @@ export const useColorRanges = () => {
   const fetchColorRanges = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get("http://localhost:8080/colorranges");
+      const response = await axios.get(`${API_BASE_URL}/colorranges`);
       if (response.status !== 200 && response.status !== 201) throw new Error("Failed to fetch color ranges");
-      setColorRanges(response.data || []);
+      setColorRanges((response.data || []) as ColorRange[]);
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message);
     } finally {
@@ -35,7 +31,7 @@ export const useColorRanges = () => {
   const handleCreate = async (colorRange: ColorRange) => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/admin/colorranges",
+        `${API_BASE_URL}/admin/colorranges`,
         colorRange,
         {
           headers: { "Content-Type": "application/json" },
@@ -51,14 +47,12 @@ export const useColorRanges = () => {
     }
   };
 
-  
-  const handleUpdate = async (e: React.FormEvent) => {
-   
-    if (!currentColorRange || !currentColorRange.ID) return;
+  const handleUpdate = async (colorRange: ColorRange) => {
+    if (!colorRange || !colorRange.ID) return;
     try {
       const response = await axios.put(
-        `http://localhost:8080/admin/colorranges/${currentColorRange.ID}`,
-        currentColorRange,
+        `${API_BASE_URL}/admin/colorranges/${colorRange.ID}`,
+        colorRange,
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
@@ -77,7 +71,7 @@ export const useColorRanges = () => {
     if (!colorRangeToDelete) return;
     try {
       const response = await axios.delete(
-        `http://localhost:8080/admin/colorranges/${colorRangeToDelete}`,
+        `${API_BASE_URL}/admin/colorranges/${colorRangeToDelete}`,
         {
           withCredentials: true,
         }

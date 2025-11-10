@@ -63,34 +63,10 @@ body {
 }
 
 @layer base {
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground; }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
-
-/* กัน layout กระตุกและให้ overlay เกาะขอบจริง */
-html { scrollbar-gutter: stable; }
-
-html, body { overflow-x: hidden; }
-
-/* ปิดการชดเชยสกอร์ลบาร์ที่ react-remove-scroll ใส่ตอน Dialog เปิด */
-body[data-scroll-locked],
-html[data-scroll-locked],
-body[style*="padding-right"] {
-  --removed-body-scroll-bar-size: 0px !important;
-  padding-right: 0 !important;
-  margin-right: 0 !important;
-}
-
-/* เผื่อบางรุ่นใส่ attr บน html แทน body */
-html[style*="padding-right"] { padding-right: 0 !important; }
-
-/* fallback: ถ้าเบราว์เซอร์ยังไม่รองรับ scrollbar-gutter */
-@supports not (scrollbar-gutter: stable) {
-  html, body { overflow-y: scroll; }
-}
-
-/* กัน scroll-chain ในคอนเทนต์ dialog */
-[data-radix-dialog-content] .overflow-y-auto { overscroll-behavior: contain; }
-
-/* กัน root กว้างเกินตอนเปิด dialog */
-html, body, #__next { width: 100%; }

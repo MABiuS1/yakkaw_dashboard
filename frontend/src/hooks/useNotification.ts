@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { Notification, NotificationForm } from "@/constant/notificationData";
 
 const EMPTY_FORM: NotificationForm = { title: "", message: "", category: "", icon: "" };
-const API = "http://localhost:8080";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api` : '/api';
 
 export const useNotifications = () => {
   // --- data ---

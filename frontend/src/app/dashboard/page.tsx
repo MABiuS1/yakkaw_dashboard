@@ -11,18 +11,6 @@ import { useSponsors } from "@/hooks/useSponsor";
 import { useNews } from "@/hooks/useNews";
 import { useCategories } from "@/hooks/useCategories";
 import Navbar from "@/components/ui/Navbar";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend,
-  LabelList,
-  Cell
-} from "recharts";
 import { StatCard } from "@/components/ui/statCard";
 import dynamic from "next/dynamic";
 const OverviewChart = dynamic(() => import("@/components/dashboard/OverviewChart"), {

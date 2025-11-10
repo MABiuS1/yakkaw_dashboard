@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { Category, CategoryForm } from "@/constant/categoryData";
 
-const API = "http://localhost:8080";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api` : '/api';
 
 const EMPTY_FORM: CategoryForm = { name: "" };
 

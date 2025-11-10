@@ -23,8 +23,6 @@
 # misc
 .DS_Store
 *.pem
-bun.lock
-bun.lockb
 
 # debug
 npm-debug.log*

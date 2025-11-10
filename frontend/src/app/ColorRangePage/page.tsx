@@ -10,7 +10,7 @@ import { FormDialog } from "@/components/ui/FormColorRangeeDialog";
 import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
 import Navbar from "@/components/ui/Navbar";
 
-const ColorRangePage = () => {
+const ColorRangePage: React.FC = () => {
   const {
     colorRanges,
     isLoading,

@@ -141,11 +141,11 @@ const DevicePage = () => {
                           <Button
                             className="bg-red-500 hover:bg-red-600 text-white text-xs"
                             onClick={() => {
-                              if (device.ID) {
-                                setDeviceToDelete(device.ID);
+                              if (typeof device.id === "number") {
+                                setDeviceToDelete(device.id);
                                 setIsConfirmDialogOpen(true);
                               } else {
-                                console.error("Device DVID is undefined.");
+                                console.error("Device ID is undefined.");
                               }
                             }}
                           >

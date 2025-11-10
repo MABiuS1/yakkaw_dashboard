@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Iridescence from '@/components/Iridescence';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
 
@@ -118,7 +119,13 @@ const LoginPage = () => {
   
   return (
     <div className="min-h-screen relative">
-   
+    <Iridescence
+      color={[1, 1, 1]}
+      mouseReact={false}
+      amplitude={0.1}
+      speed={1.0}
+      className="absolute inset-0 -z-10"
+    />
     <div className="relative flex items-center justify-center top-32">
       <div className="w-full max-w-md px-4">
         <div className="text-center mb-8">

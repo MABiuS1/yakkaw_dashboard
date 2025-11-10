@@ -1,5 +1,5 @@
 export type Device = {
-    id?: number; // corresponds to gorm.Model ID
+    ID?: number; // corresponds to gorm.Model ID (gorm embeds it as uppercase)
     dvid: string;
     address: string;
     longitude: number;

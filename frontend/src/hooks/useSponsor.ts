@@ -1,268 +1,141 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import type { Sponsor, SponsorForm } from "@/constant/sponsorData";
+import { useState, useEffect } from "react";
+import { Sponsor } from "@/constant/sponsorData";
 
-const EMPTY_FORM: SponsorForm = { name: "", logo: "", description: "", category: "" };
-const API = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
 export const useSponsors = () => {
-  // ---------------- state: data ----------------
-  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [filteredSponsors, setFilteredSponsors] = useState<Sponsor[]>([]);
-
-  // แยก searchInput (พิมพ์สด) ออกจาก searchQuery (ค่า debounced ที่เอาไปกรอง)
-  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // ---------------- state: status ----------------
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(true);     // โหลดครั้งแรก
-  const [isFetching, setIsFetching] = useState<boolean>(false);  // โหลดรอบถัดไป/รีเฟรช
-  const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
-
-  // ---------------- state: dialogs ----------------
-  const [isEditDialogOpen, _setIsEditDialogOpen] = useState<boolean>(false);
-  const [isCreateDialogOpen, _setIsCreateDialogOpen] = useState<boolean>(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
+  const [sponsorsToDelete, setSponsorsToDelete] = useState<string | null>(null);
+  const [currentSponsor, setCurrentSponsors] = useState<Sponsor>({
+    id: null,
+    name: "",
+    description: "",
+    logo: "",
+  });
 
-  // ---------------- state: view / selection ----------------
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [selectedSponsor, setSelectedSponsor] = useState<Sponsor | null>(null);
-
-  // ---------------- state: form / editing ----------------
-  const [currentSponsor, setCurrentSponsor] = useState<SponsorForm>(EMPTY_FORM);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [sponsorsToDelete, setSponsorsToDelete] = useState<number | null>(null);
-
-  // abort controller สำหรับ fetch ปัจจุบัน (ยกเลิกได้)
-  const fetchAbortRef = useRef<AbortController | null>(null);
-
-  // transition เพื่อไม่ block UI ตอนอัปเดต state เยอะ ๆ
-  const [_isPending, startTransition] = useTransition();
-
-  // ---------------- helpers ----------------
-  const resetForm = () => {
-    setEditingId(null);
-    setCurrentSponsor(EMPTY_FORM);
-  };
-
-  const setIsEditDialogOpen = (open: boolean) => {
-    if (!open) resetForm();
-    _setIsEditDialogOpen(open);
-  };
-  const setIsCreateDialogOpen = (open: boolean) => {
-    if (!open) resetForm();
-    _setIsCreateDialogOpen(open);
-  };
-
-  // ---------------- auth ----------------
-  const checkAuth = useCallback(async () => {
-    const r = await fetch(`${API}/me`, { credentials: "include" });
-    if (!r.ok) throw new Error("Unauthorized");
-  }, []);
-
-  // ---------------- fetch ----------------
-  const fetchSponsors = useCallback(async (isInitial = false) => {
-    // ยกเลิกรอบก่อนถ้ามี
-    fetchAbortRef.current?.abort();
-    const controller = new AbortController();
-    fetchAbortRef.current = controller;
-
+  const checkAuth = async () => {
     try {
-      isInitial ? setIsLoading(true) : setIsFetching(true);
-      setError("");
-
-      const r = await fetch(`${API}/sponsors`, {
-        credentials: "include",
-        signal: controller.signal,
-      });
-      if (!r.ok) throw new Error("Failed to fetch sponsors");
-      const data: Sponsor[] = await r.json();
-
-      startTransition(() => {
-        setSponsors(Array.isArray(data) ? data : []);
-      });
-    } catch (err: any) {
-      if (err?.name === "AbortError") return; // ถูกยกเลิก—ไม่ต้องตั้ง error
-      setError(err?.message ?? "Failed to fetch sponsors");
-    } finally {
-      isInitial ? setIsLoading(false) : setIsFetching(false);
+      const response = await fetch(`${API_BASE_URL}/me`, { credentials: "include" });
+      if (!response.ok) throw new Error("Unauthorized");
+    } catch (err) {
+      window.location.href = "/login";
     }
-  }, []);
-
-  // ---------------- dialog open helpers ----------------
-  const openCreateDialog = () => {
-    resetForm();
-    setIsCreateDialogOpen(true);
   };
 
-  const openEditDialog = (n: Sponsor) => {
-    setEditingId(Number(n.id));
-    setCurrentSponsor({
-      name: n.name ?? "",
-      logo: n.logo ?? "",
-      description: n.description ?? "",
-      category: n.category ?? "",
-    });
-    setIsEditDialogOpen(true);
+  const fetchSponsors = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/sponsors`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch sponsors");
+      const data = await response.json();
+      setSponsors(data || []);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // ---------------- CRUD ----------------
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isCreating) return;
     try {
-      setIsCreating(true);
-      const r = await fetch(`${API}/admin/sponsors`, {
+      const response = await fetch(`${API_BASE_URL}/admin/sponsors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(currentSponsor),
       });
-      if (!r.ok) throw new Error("Failed to create sponsor");
-
-      await fetchSponsors(false);
+      if (!response.ok) throw new Error("Failed to create sponsors");
+      await fetchSponsors();
       setIsCreateDialogOpen(false);
-      resetForm();
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to create sponsor");
-    } finally {
-      setIsCreating(false);
+      setCurrentSponsors({ id: null, name: "", description: "", logo: "" });
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingId || isUpdating) return;
+    if (!currentSponsor.id) return;
     try {
-      setIsUpdating(true);
-      const r = await fetch(`${API}/admin/sponsors/${editingId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/sponsors/${currentSponsor.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(currentSponsor),
       });
-      if (!r.ok) throw new Error("Failed to update sponsor");
-
-      await fetchSponsors(false);
+      if (!response.ok) throw new Error("Failed to update sponsors");
+      await fetchSponsors();
       setIsEditDialogOpen(false);
-      resetForm();
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to update sponsor");
-    } finally {
-      setIsUpdating(false);
+      setCurrentSponsors({ id: null, name: "", description: "", logo: "" });
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
   const handleDelete = async () => {
-    if (sponsorsToDelete == null || isDeleting) return;
+    if (!sponsorsToDelete) return;
     try {
-      setIsDeleting(true);
-      const r = await fetch(`${API}/admin/sponsors/${sponsorsToDelete}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/sponsors/${sponsorsToDelete}`, {
         method: "DELETE",
         credentials: "include",
       });
-      if (!r.ok) throw new Error("Failed to delete sponsor");
-
-      await fetchSponsors(false);
+      if (!response.ok) throw new Error("Failed to delete sponsors");
+      await fetchSponsors();
       setIsConfirmDialogOpen(false);
       setSponsorsToDelete(null);
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to delete sponsor");
-    } finally {
-      setIsDeleting(false);
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
-  // ---------------- effects ----------------
   useEffect(() => {
-    (async () => {
-      try {
-        await checkAuth();
-        await fetchSponsors(true);
-      } catch {
-        window.location.href = "/login";
-      }
-    })();
-
-    return () => {
-      fetchAbortRef.current?.abort();
-    };
-  }, [checkAuth, fetchSponsors]);
-
-  // debounce searchInput -> searchQuery (ประมาณ 250ms)
-  useEffect(() => {
-    const t = setTimeout(() => setSearchQuery(searchInput.trim()), 250);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  // คำนวณรายการที่ผ่านการกรอง (memo เพื่อลด re-render)
-  const computedFiltered = useMemo(() => {
-    if (!searchQuery) return sponsors;
-    const q = searchQuery.toLowerCase();
-    return sponsors.filter((s) =>
-      (s.name ?? "").toLowerCase().includes(q) ||
-      (s.category ?? "").toLowerCase().includes(q) ||
-      (s.description ?? "").toLowerCase().includes(q)
-    );
-  }, [sponsors, searchQuery]);
+    checkAuth();
+    fetchSponsors();
+  }, []);
 
   useEffect(() => {
-    setFilteredSponsors(computedFiltered);
-  }, [computedFiltered]);
+    if (searchQuery) {
+      setFilteredSponsors(
+        sponsors.filter((sponsor) =>
+            sponsor.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredSponsors(sponsors);
+    }
+  }, [searchQuery, sponsors]);
 
-  // ---------------- expose API ----------------
   return {
-    // data
-    sponsors,
     filteredSponsors,
-
-    // search
-    searchInput,       // ใช้กับ <Input value={searchInput} onChange={setSearchInput}>
-    setSearchInput,
-    searchQuery,       // เผื่อหน้าเดิมยังใช้ตัวนี้อยู่
+    searchQuery,
     setSearchQuery,
-
-    // dialogs
+    sponsors,
+    isLoading,
+    error,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isConfirmDialogOpen,
     setIsConfirmDialogOpen,
-
-    // view dialog
-    isViewDialogOpen,
-    setIsViewDialogOpen,
-    selectedSponsor,
-    setSelectedSponsor,
-
-    // delete
     sponsorsToDelete,
     setSponsorsToDelete,
-    handleDelete,
-
-    // form/editing
     currentSponsor,
-    setCurrentSponsor,
-    editingId,
-    openCreateDialog,
-    openEditDialog,
+    setCurrentSponsors,
     handleCreate,
     handleUpdate,
-
-    // status
-    isLoading,
-    isFetching,
-    isCreating,
-    isUpdating,
-    isDeleting,
-    error,
-
-    // manual refetch
-    refetch: () => fetchSponsors(false),
+    handleDelete,
   };
 };

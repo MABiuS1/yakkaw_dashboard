@@ -1,0 +1,6 @@
+.git
+.DS_Store
+.next
+node_modules
+out
+npm-debug.log

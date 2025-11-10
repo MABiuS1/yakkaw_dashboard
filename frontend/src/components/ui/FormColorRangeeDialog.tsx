@@ -22,7 +22,7 @@ type Props = {
   existingRanges: ColorRange[];
 };
 
-export const FormDialog = ({
+export const FormDialog: React.FC<Props> = ({
   isOpen,
   onOpenChange,
   onSubmit,
@@ -31,7 +31,7 @@ export const FormDialog = ({
   title,
   submitButtonText,
   existingRanges,
-}:Props) => {
+}) => {
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

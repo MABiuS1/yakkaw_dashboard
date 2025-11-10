@@ -1,87 +1,117 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Search, Plus } from "lucide-react";
-
+import { AlertCircle, Search, Loader2, Plus } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotification";
-import { NotificationCard } from "@/components/notifications/NotificationCard";
-import { FormDialog } from "@/components/notifications/FormNotificationDialog";
+import { NotificationCard } from "@/components/ui/NotificationCard";
+import { FormDialog } from "@/components/ui/FormNotificationDialog";
 import { ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog";
-import { NotificationDialog } from "@/components/notifications/NotificationDialog";
-import type { Notification } from "@/constant/notificationData";
-
 import Navbar from "@/components/ui/Navbar";
-import { CardSkeleton } from "@/components/ui/CardSkeleton";
 
-function NotificationPage() {
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-
+const NotificationPage: React.FC = () => {
   const {
     filteredNotifications,
+    searchQuery,
+    setSearchQuery,
+    isLoading,
     error,
-    isLoading,           // 👈 ใช้ตรงนี้
-    isEditDialogOpen, setIsEditDialogOpen,
-    isCreateDialogOpen, setIsCreateDialogOpen,
-    isConfirmDialogOpen, setIsConfirmDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isCreateDialogOpen,
+    setIsCreateDialogOpen,
+    isConfirmDialogOpen,
+    setIsConfirmDialogOpen,
     setNotificationToDelete,
+    currentNotification,
+    setCurrentNotification,
+    handleCreate,
+    handleUpdate,
     handleDelete,
-    currentForm, setCurrentForm,
-    handleCreate, handleUpdate,
-    openCreateDialog, openEditDialog,
-    searchInput, setSearchInput,
-
   } = useNotifications();
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
 
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
+    exit: {
+      scale: 0.96,
+      opacity: 0,
+      transition: { duration: 0.2 },
+    },
+  };
 
-
-  const sortedNotifications = useMemo(() => {
-    if (isLoading) return [];
-    const arr = [...filteredNotifications];
-    arr.sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime());
-    return arr;
-  }, [isLoading, filteredNotifications]).reverse();
-
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin h-12 w-12 text-primary mb-4" />
+        <p className="text-lg text-muted-foreground">
+          Loading notifications...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
       <Navbar />
-      <div className="bg-gradient-to-b from-blue-50 to-indigo-50 min-h-screen pt-7 pb-10 px-4 sm:px-6 lg:px-8 ">
+      <div className="bg-gradient-to-b from-blue-50 to-indigo-50 min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="max-w-7xl mx-auto"
+          transition={{ duration: 0.5 }}
+          className="p-6 max-w-7xl mx-auto"
         >
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-blue-800">Manage Notification</h1>
-              <p className="text-blue-600 mt-1">Manage Notification for Add, Update and Delete</p>
+              <h1 className="text-3xl font-bold text-blue-800">
+                Manage Notification
+              </h1>
+              <p className="text-blue-600 mt-1">
+                Manage of Notification for Post, Edit and Delete
+              </p>
             </div>
             <Button
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-700"
-              onClick={openCreateDialog} // ใช้ helper เพื่อรีเซ็ตฟอร์มก่อนเปิด
+              onClick={() => setIsCreateDialogOpen(true)}
             >
               <Plus size={16} /> Add Notification
             </Button>
           </div>
 
-          {/* Search */}
-          <div className="mb-6 max-w-xl relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
-            <Input
-              placeholder="Search Notifications..."
-              className="pl-9 bg-white py-5 rounded-xl shadow-sm disabled:opacity-60"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6"
+          >
+            <div className="rounded-xl md:col-span-6 relative shadow-md ">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 "
+                size={20}
+              />
+              <Input
+                placeholder="Search Sponsors..."
+                className="pl-10 bg-white py-5 rounded-xl focus:ring-5 transition-all duration-700"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </motion.div>
 
           {error && (
             <Alert variant="destructive" className="mb-4">
@@ -92,33 +122,32 @@ function NotificationPage() {
 
           <AnimatePresence>
             <motion.div
+              variants={containerVariants}
               initial="hidden"
               animate="visible"
               className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
             >
-              {isLoading ? (
-                // 👉 ใช้ Skeleton แทนการ์ดจริง
-                Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
-              ) : sortedNotifications.length === 0 ? (
-                <div className="col-span-full text-center p-10 bg-white rounded-lg shadow-lg border">
-                  No Notification found
-                </div>
+              {filteredNotifications.length === 0 ? (
+                <motion.div
+                  variants={itemVariants}
+                  className="text-center p-10 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100"
+                >
+                  <h3 className="text-lg font-medium text-blue-700">
+                    No notifications found
+                  </h3>
+                </motion.div>
               ) : (
-                sortedNotifications.map((notification) => (
+                filteredNotifications.map((notification) => (
                   <NotificationCard
                     key={notification.id}
                     notification={notification}
                     onEdit={() => {
-                      openEditDialog(notification);
+                      setCurrentNotification(notification);
                       setIsEditDialogOpen(true);
                     }}
                     onDelete={() => {
-                      setNotificationToDelete(notification.id as any);
+                      setNotificationToDelete(notification.id);
                       setIsConfirmDialogOpen(true);
-                    }}
-                    onView={() => {
-                      setSelectedNotification(notification);     // ✅ set ตัวที่เลือก
-                      setIsViewDialogOpen(true);                // ✅ เปิด dialog
                     }}
                   />
                 ))
@@ -127,24 +156,22 @@ function NotificationPage() {
           </AnimatePresence>
         </motion.div>
 
-        {/* CREATE */}
         <FormDialog
           isOpen={isCreateDialogOpen}
-          onOpenChange={(open) => setIsCreateDialogOpen(open)} // hook จะล้าง form ให้ตอนปิด
+          onOpenChange={setIsCreateDialogOpen}
           onSubmit={handleCreate}
-          form={currentForm}
-          setForm={setCurrentForm}
+          notification={currentNotification}
+          setNotification={setCurrentNotification}
           title="Create Notification"
-          submitButtonText="Create"
+          submitButtonText="CREATE"
         />
 
-        {/* EDIT */}
         <FormDialog
           isOpen={isEditDialogOpen}
-          onOpenChange={(open) => setIsEditDialogOpen(open)} // hook จะล้าง form ให้ตอนปิด
+          onOpenChange={setIsEditDialogOpen}
           onSubmit={handleUpdate}
-          form={currentForm}
-          setForm={setCurrentForm}
+          notification={currentNotification}
+          setNotification={setCurrentNotification}
           title="Edit Notification"
           submitButtonText="Update"
         />
@@ -153,12 +180,6 @@ function NotificationPage() {
           isOpen={isConfirmDialogOpen}
           onOpenChange={setIsConfirmDialogOpen}
           onConfirm={handleDelete}
-        />
-
-        <NotificationDialog
-          isOpen={isViewDialogOpen}
-          onOpenChange={setIsViewDialogOpen}
-          notification={selectedNotification}
         />
       </div>
     </>

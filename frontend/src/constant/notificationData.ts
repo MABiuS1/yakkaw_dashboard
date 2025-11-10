@@ -1,46 +1,37 @@
 export type Notification = {
-  id: number;               
-  title: string;
-  message: string;
-  category: string;
-  icon?: string;
-  createdAt?: string;       
-  updatedAt?: string;
-  time?: string; // ใช้สำหรับแสดงใน UI
-};
-
-export const EMPTY_NOTIFICATION: Notification = {
-  id: 0,                     
-  title: "",
-  message: "",
-  category: "",
-  icon: "",
-};
-
-// สำหรับฟอร์ม (ไม่ต้องมี id/createdAt)
-export type NotificationForm = {
-  title: string;
-  message: string;
-  category: string;
-  icon?: string;
-};
+    id: string | null;
+    title: string;
+    message: string;
+    icon: string;
+  }
 
 export type FormDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (e: React.FormEvent) => void;
-
-  // เปลี่ยนจาก notification/setNotification -> form/setForm
-  form: NotificationForm;
-  setForm: React.Dispatch<React.SetStateAction<NotificationForm>>;
-
-  title: string;
-  submitButtonText: string;
-};
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSubmit: (e: React.FormEvent) => void;
+    notification: {
+      id: string | null;
+      title: string;
+      message: string;
+      icon: string;
+    };
+    setNotification: (notification: {
+      id: string | null;
+      title: string;
+      message: string;
+      icon: string;
+    }) => void;
+    title: string;
+    submitButtonText: string;
+  }
 
 export type NotificationCardProps = {
-  notification: Notification;
-  onEdit: () => void;
-  onDelete: () => void;
-  onView: () => void;
-};
+    notification: {
+      id: string | null;
+      title: string;
+      message: string;
+      icon: string;
+    };
+    onEdit: () => void;
+    onDelete: () => void;
+  }

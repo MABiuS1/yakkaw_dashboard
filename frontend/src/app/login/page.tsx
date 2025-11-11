@@ -32,8 +32,6 @@ const LoginPage = () => {
   const LOGIN_TIMEOUT_MS = 10000; // 10 seconds
 
   useEffect(() => {
-    router.prefetch("/dashboard");
-
     const savedUsername = localStorage.getItem("rememberedUsername");
     if (savedUsername) {
       setFormData((prev) => ({
@@ -41,6 +39,17 @@ const LoginPage = () => {
         username: savedUsername,
         rememberMe: true,
       }));
+    }
+
+    const hasAccessToken =
+      typeof document !== "undefined" &&
+      document.cookie
+        .split(";")
+        .some((cookie) => cookie.trim().startsWith("access_token="));
+
+    if (hasAccessToken) {
+      // Prefetch only when auth cookie exists to avoid caching redirect responses
+      router.prefetch("/dashboard");
     }
   }, [router]);
 

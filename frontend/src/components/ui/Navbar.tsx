@@ -58,11 +58,11 @@ const Navbar = () => {
     <>
       {[
         { href: "/notifications", icon: Bell, label: "Notifications" },
-        { href: "/sponsor", icon: Gift, label: "Sponsor" },
+        { href: "/sponsors", icon: Gift, label: "Sponsor" },
         { href: "/news", icon: Newspaper, label: "News" },
         { href: "/categories", icon: FolderOpen, label: "Categories" },
-        { href: "/ColorRangePage", icon: FolderOpen, label: "ColorRange" },
-        { href: "/DevicePage", icon: FolderOpen, label: "DevicePage" },
+        { href: "/color-ranges", icon: FolderOpen, label: "ColorRange" },
+        { href: "/devices", icon: FolderOpen, label: "DevicePage" },
 
 
       ].map((link, index) => (

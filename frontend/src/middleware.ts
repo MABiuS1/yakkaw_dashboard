@@ -24,10 +24,10 @@ export const config = {
         '/dashboard/:path*',
         '/profile/:path*',
         '/categories/:path*',
-        '/ColorRangePage/:path*',
-        '/DevicePage/:path*',
+        '/color-ranges/:path*',
+        '/devices/:path*',
         '/notifications/:path*',
-        '/sponsor/:path*',
+        '/sponsors/:path*',
         '/news/:path*',
     ], // เพิ่ม path ที่ต้องการให้ middleware ตรวจสอบ token
 };

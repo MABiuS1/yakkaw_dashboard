@@ -39,7 +39,7 @@ func main() {
 		// รับค่า API_URL จาก environment variable หรือใช้ fallback ถ้าไม่มีค่า
 		apiURL := os.Getenv("API_URL")
 		if apiURL == "" {
-			apiURL = "https://yakkaw.mfu.ac.th/api/yakkaw/devices" // เปลี่ยนเป็น URL ที่ถูกต้องของคุณ
+			apiURL = "https://yakkaw.mfu.ac.th/api/yakkaw/devices" 
 		}
 		for {
 			services.FetchAndStoreData(apiURL)

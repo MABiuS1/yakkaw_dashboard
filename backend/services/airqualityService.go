@@ -11,6 +11,57 @@ import (
 	"yakkaw_dashboard/models"
 )
 
+// isValidSensorData กรองให้เหลือข้อมูลที่ status = Active และฟิลด์จำเป็นต้องไม่ว่าง/null
+func isValidSensorData(data models.SensorData) bool {
+	if data.Status != "Active" {
+		return false
+	}
+
+	switch {
+	case data.DVID == "",
+		data.DeviceID == "",
+		data.Place == "",
+		data.Address == "",
+		data.Model == "",
+		data.DeployDate == "",
+		data.ContactName == "",
+		data.ContactPhone == "",
+		data.Note == "",
+		data.DDate == "",
+		data.DTime == "",
+		data.Color == "",
+		data.Trend == "":
+		return false
+	}
+
+	if data.Latitude == 0 || data.Longitude == 0 || data.Timestamp == 0 {
+		return false
+	}
+
+	if data.Av24h == 0 || data.Av12h == 0 || data.Av6h == 0 || data.Av3h == 0 || data.Av1h == 0 {
+		return false
+	}
+
+	if data.PM25 == 0 || data.PM10 == 0 || data.PM100 == 0 || data.AQI == 0 || data.Temperature == 0 || data.Humidity == 0 || data.Pres == 0 {
+		return false
+	}
+
+	return true
+}
+
+// filterSensorData คืน slice ที่ผ่านการ validate แล้วเท่านั้น
+func filterSensorData(datas []models.SensorData) []models.SensorData {
+	var filtered []models.SensorData
+	for _, data := range datas {
+		if isValidSensorData(data) {
+			filtered = append(filtered, data)
+		} else {
+			log.Printf("Skipping inactive/incomplete sensor data for device %s", data.DeviceID)
+		}
+	}
+	return filtered
+}
+
 // FetchAndStoreData ดึงข้อมูลจาก API แล้วเก็บลง DB (ด้วย Raw SQL ผ่าน GORM)
 func FetchAndStoreData(apiURL string) {
 	resp, err := http.Get(apiURL)
@@ -32,9 +83,10 @@ func FetchAndStoreData(apiURL string) {
 		return
 	}
 
+	apiResp.Response = filterSensorData(apiResp.Response)
+
 	// วนลูป insert ข้อมูลลงในตาราง sensor_data
 	for _, data := range apiResp.Response {
-
 		// GORM: Exec() จะคืนค่าเป็น *gorm.DB
 		result := database.DB.Exec(`
 			INSERT INTO sensor_data (

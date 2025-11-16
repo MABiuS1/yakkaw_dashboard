@@ -43,7 +43,7 @@ const DevicePage: React.FC = () => {
   return (
     <>
       <Navbar />
-      <div className="bg-gradient-to-b from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
+      <div className="bg-gradient-to-b from-blue-50 to-indigo-50 min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

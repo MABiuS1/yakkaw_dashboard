@@ -34,18 +34,6 @@ func isValidSensorData(data models.SensorData) bool {
 		return false
 	}
 
-	if data.Latitude == 0 || data.Longitude == 0 || data.Timestamp == 0 {
-		return false
-	}
-
-	if data.Av24h == 0 || data.Av12h == 0 || data.Av6h == 0 || data.Av3h == 0 || data.Av1h == 0 {
-		return false
-	}
-
-	if data.PM25 == 0 || data.PM10 == 0 || data.PM100 == 0 || data.AQI == 0 || data.Temperature == 0 || data.Humidity == 0 || data.Pres == 0 {
-		return false
-	}
-
 	return true
 }
 

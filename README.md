@@ -68,7 +68,6 @@ DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=yakkaw_db
 SERVER_PORT=8080
-API_URL=https://yakkaw.mfu.ac.th/api/yakkaw/devices
 ```
 
 ### Run Database Migrations

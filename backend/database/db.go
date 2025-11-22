@@ -34,7 +34,21 @@ func Init() {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	DB.AutoMigrate(&models.Notification{}, &models.User{}, &models.Sponsor{}, &models.SensorData{}, &models.APIResponse{}, &models.ChartData{}, models.DatasetChart{}, &models.Category{}, &models.News{}, &models.Device{}, &models.ColorRange{})
+	DB.AutoMigrate(
+		&models.Notification{},
+		&models.User{},
+		&models.Sponsor{},
+		&models.SensorData{},
+		&models.APIResponse{},
+		&models.ChartData{},
+		models.DatasetChart{},
+		&models.Category{},
+		&models.News{},
+		&models.Device{},
+		&models.ColorRange{},
+		&models.SupportContact{},
+		&models.SupportFAQ{},
+	)
 	ensureIndexes(DB)
 
 	fmt.Println("Database connection successfully established and migrations applied")

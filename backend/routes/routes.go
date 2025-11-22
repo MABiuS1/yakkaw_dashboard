@@ -34,16 +34,20 @@ func Init(e *echo.Echo) {
 	// 🔹 Instantiate services using the database connection
 	categoryService := services.NewCategoryService(database.DB)
 	newsService := services.NewNewsService(database.DB)
+	supportService := services.NewSupportService(database.DB)
 
 	// 🔹 Create controllers by injecting the corresponding service
 	categoryController := controllers.NewCategoryController(categoryService)
 	newsController := controllers.NewNewsController(newsService)
+	supportController := controllers.NewSupportController(supportService)
 
 	// 🔹 Public Routes for Categories and News (READ only)
 	e.GET("/categories", categoryController.GetCategories)
 	e.GET("/categories/:id", categoryController.GetCategoryByID)
 	e.GET("/news", newsController.GetNews)
 	e.GET("/news/:id", newsController.GetNewsByID)
+	e.GET("/api/support/contact", supportController.GetSupportContact)
+	e.GET("/api/support/faqs", supportController.GetSupportFAQs)
 
 	// 🔹 Protected Admin Routes
 	adminGroup := e.Group("/admin")
@@ -66,6 +70,15 @@ func Init(e *echo.Echo) {
 	adminGroup.POST("/news", newsController.CreateNews)
 	adminGroup.PUT("/news/:id", newsController.UpdateNews)
 	adminGroup.DELETE("/news/:id", newsController.DeleteNews)
+
+	// ✅ Admin-only: Manage Support Content
+	supportAdminGroup := adminGroup.Group("/support")
+	supportAdminGroup.GET("/contact", supportController.AdminListContacts)
+	supportAdminGroup.PUT("/contact/:lang", supportController.AdminUpdateContact)
+	supportAdminGroup.GET("/faqs", supportController.AdminListFAQs)
+	supportAdminGroup.POST("/faqs", supportController.AdminCreateFAQ)
+	supportAdminGroup.PUT("/faqs/:id", supportController.AdminUpdateFAQ)
+	supportAdminGroup.DELETE("/faqs/:id", supportController.AdminDeleteFAQ)
 
 	// ✅ Admin-only: Manage Dashboard & Notifications
 	adminGroup.GET("/dashboard", controllers.AdminDashboard)

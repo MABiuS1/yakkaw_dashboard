@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, Bell, Settings, LogOut, Home, Gift, Users, Newspaper, FolderOpen } from "lucide-react";
+import { Menu, Bell, Settings, LogOut, Home, Gift, Users, Newspaper, FolderOpen, LifeBuoy } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,8 +63,7 @@ const Navbar = () => {
         { href: "/categories", icon: FolderOpen, label: "Categories" },
         { href: "/color-ranges", icon: FolderOpen, label: "ColorRange" },
         { href: "/devices", icon: FolderOpen, label: "DevicePage" },
-
-
+        { href: "/support", icon: LifeBuoy, label: "Support" },
       ].map((link, index) => (
         <Link key={index} href={link.href}>
           <motion.div
@@ -88,6 +87,7 @@ const Navbar = () => {
         { href: "/sponsor", icon: Gift, label: "Sponsor" },
         { href: "/news", icon: Newspaper, label: "News" },
         { href: "/categories", icon: FolderOpen, label: "Categories" },
+        { href: "/support", icon: LifeBuoy, label: "Support" },
       ].map((link, index) => (
         <Link key={index} href={link.href}>
           <motion.div

@@ -141,7 +141,7 @@ export const useSupport = () => {
           throw new Error(text || "Failed to load FAQs");
         }
         const data = await response.json();
-        const rawItems = Array.isArray(data.items) ? data.items : [];
+        const rawItems: unknown[] = Array.isArray(data.items) ? data.items : [];
         const normalized = rawItems
           .filter(isRawFaq)
           .map((item, index) => ({

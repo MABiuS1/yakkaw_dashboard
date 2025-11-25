@@ -46,8 +46,17 @@ DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=yakkaw_db
 SERVER_PORT=8080
+JWT_SECRET=replace-with-strong-random-string
+# Optional: overrides for QR login flow (useful in non-local environments)
+# QR_CONSUME_BASE_URL=https://api.example.com     # base URL where /qr/consume is served
+# QR_DEFAULT_REDIRECT=https://app.example.com/qr-create-device
+# FRONTEND_BASE_URL=https://app.example.com       # fallback to build QR default redirect
 ```
 `DATABASE_PUBLIC_URL` is the preferred single variable for deployments (Railway, Supabase, etc). When it is present it overrides the individual `DB_*` settings, which are still read as a fallback for local development.
+
+- `JWT_SECRET` (or `APP_SECRET`) is required for signing/validating JWTs across login, admin middleware, and QR login. Do **not** leave it empty in production.
+- If `QR_CONSUME_BASE_URL` is set, generated QR URLs will point there; otherwise they use the incoming request host/scheme.
+- Redirect order for QR login: `redirect` query param → `QR_DEFAULT_REDIRECT` → `FRONTEND_BASE_URL + /qr-create-device` → request host/scheme.
 
 ### Run Database Migrations
 ```sh

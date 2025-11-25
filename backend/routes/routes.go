@@ -53,6 +53,7 @@ func Init(e *echo.Echo) {
 	adminGroup := e.Group("/admin")
 	adminGroup.Use(middleware.JWTMiddleware) // Protect all admin routes
 
+	adminGroup.POST("/qr/generate", controllers.GenerateQRLogin)
 	adminGroup.POST("/devices", controllers.CreateDevice)
 	adminGroup.PUT("/devices/:dvid", controllers.UpdateDevice)
 	adminGroup.DELETE("/devices/:id", controllers.DeleteDevice)
@@ -98,12 +99,17 @@ func Init(e *echo.Echo) {
 	e.GET("/notifications", controllers.GetNotifications)
 	e.GET("/me", controllers.Me)
 
+	e.GET("/qr/consume", controllers.ConsumeQRLogin)
+
 	// 🔹 Air Quality Data Routes
 	airCtl := controllers.NewAirQualityController()
+	e.GET("/api/airquality/one_day", airCtl.GetOneDayDataHandler)
 	e.GET("/api/airquality/one_week", airCtl.GetOneWeekDataHandler)
 	e.GET("/api/airquality/one_month", airCtl.GetOneMonthDataHandler)
 	e.GET("/api/airquality/three_months", airCtl.GetThreeMonthsDataHandler)
 	e.GET("/api/airquality/one_year", airCtl.GetOneYearDataHandler)
+	e.GET("/api/airquality/one_year_series", controllers.GetAirQualityOneYearSeriesByAddress)
+	e.GET("/api/airquality/one_year_series_by_province", controllers.GetAirQualityOneYearSeriesByProvince)
 	e.GET("/api/airquality/province_average", airCtl.GetProvinceAveragePM25Handler)
 	e.GET("/api/airquality/sensor_data/week", airCtl.GetSensorData7DaysHandler)
 
@@ -111,6 +117,11 @@ func Init(e *echo.Echo) {
 	chartDataController := controllers.NewChartDataController()
 	e.GET("/api/chartdata", chartDataController.GetChartDataHandler)
 	e.GET("/api/chartdata/today", chartDataController.GetTodayChartDataHandler)
+	e.GET("/api/chartdata/heatmap_one_year", chartDataController.GetHeatmapOneYearHandler)
+	e.GET("/chart/data", chartDataController.GetChartDataHandler)
+	e.GET("/chart/today", chartDataController.GetTodayChartDataHandler)
+	e.GET("/chart/heatmap/year", chartDataController.GetHeatmapOneYearHandler)
+	e.GET("/chart/ranking/daily", chartDataController.GetDailyRankingHandler)
 
 	// 🔹 Get Latest Air Quality
 	e.GET("/api/airquality/latest", controllers.GetLatestAirQuality)

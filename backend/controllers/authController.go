@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"yakkaw_dashboard/config"
 	"yakkaw_dashboard/database"
 	"yakkaw_dashboard/models"
 
@@ -13,8 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var jwtSecret = []byte("your-secret-key")
 
 func shouldUseSecureCookie(c echo.Context) bool {
 	if proto := c.Request().Header.Get("X-Forwarded-Proto"); proto != "" {
@@ -98,7 +97,7 @@ func Login(c echo.Context) error {
 
 	// Generate token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtSecret)
+	tokenString, err := token.SignedString(config.JWTSecret())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Error generating token")
 	}
@@ -174,7 +173,7 @@ func Me(c echo.Context) error {
 	}
 
 	token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return config.JWTSecret(), nil
 	})
 
 	if err != nil || !token.Valid {

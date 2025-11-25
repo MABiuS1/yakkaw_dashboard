@@ -1,4 +1,3 @@
-// components/dashboard/OverviewChart.tsx
 "use client";
 
 import {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react"; // 💡 เพิ่ม Chevron icons
 import { SponsorCardProps } from "@/constant/sponsorData";
 
 export const SponsorsCard = ({
@@ -17,6 +17,9 @@ export const SponsorsCard = ({
   const desc = sponsor.description || "";
   const truncated = desc.length > 140 ? `${desc.slice(0, 140)}…` : desc;
 
+  const hasDescription = desc.length > 0;
+  const isTruncated = desc.length > 140;
+
   return (
     <motion.div
       layout
@@ -24,10 +27,10 @@ export const SponsorsCard = ({
         bg-white rounded-xl overflow-hidden
         border border-amber-100 shadow-sm hover:shadow-md
         transition-all duration-300 flex flex-col
-        min-h-[300px]
+        min-h-[auto]
       "
     >
-      {/* Header */}
+      {/* 1. Header (มีการปรับให้มีพื้นที่สำหรับ Description Toggle) */}
       <CardHeader className="px-4 pt-4 pb-3 border-b flex flex-row items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <CardTitle className="text-base font-semibold text-amber-900 leading-tight line-clamp-2">
@@ -66,39 +69,49 @@ export const SponsorsCard = ({
           </Button>
         </div>
       </CardHeader>
+      
+      {/* 2. Description Preview (ตำแหน่งใหม่: ใต้ Header) */}
+      {hasDescription && (
+        <div className="px-4 pt-3 pb-2 text-sm text-gray-700">
+            <p className="leading-snug">
+                {isExpanded ? desc : truncated}
+            </p>
+            {/* 💡 ปุ่มสำหรับขยาย/ย่อข้อความ */}
+            {isTruncated && (
+                <button
+                    type="button"
+                    onClick={toggleExpand}
+                    className="mt-1 text-amber-600 hover:text-amber-800 flex items-center text-xs font-medium"
+                    aria-label={isExpanded ? "Collapse description" : "Expand description"}
+                >
+                    {isExpanded ? 'ย่อข้อความ' : 'อ่านเพิ่มเติม'}
+                    {isExpanded ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
+                </button>
+            )}
+        </div>
+      )}
 
-      {/* Image + Message (ชิดล่างของการ์ด) */}
-      <CardContent className="p-0 mt-auto">
+      {/* 3. Image (ตอนนี้สามารถคลิกได้ทั้งภาพ) */}
+      <CardContent 
+        className="p-0 m-0 mt-auto cursor-pointer" 
+        onClick={onView}
+        role="button"
+        aria-label="Open sponsor"
+      >
         <div
-          className="relative w-full aspect-[16/9] bg-slate-100 overflow-hidden cursor-pointer group"
-          onClick={onView}
-          role="button"
-          aria-label="Open sponsor"
+          // ⬇️ ลบทุกอย่างที่เกี่ยวข้องกับ Overlay ข้อความออก
+          className="relative w-full aspect-[6/1] bg-slate-100 overflow-hidden group"
         >
           <motion.img
             src={sponsor.logo || "/placeholder.png"}
             alt={sponsor.name || "Sponsor image"}
-            className="absolute inset-0 w-full h-full object-cover group-hover:brightness-95 transition-all duration-300"
+            className="absolute inset-0 w-full h-full object-cover object-left group-hover:brightness-95 transition-all duration-300"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/placeholder.png";
             }}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.3 }}
           />
-
-          {/* Overlay ข้อความ preview */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleExpand();
-            }}
-            className="absolute inset-x-0 bottom-0 text-left bg-gradient-to-t from-black/70 to-transparent p-3"
-          >
-            <p className="text-white text-sm leading-snug line-clamp-3">
-              {isExpanded ? desc : truncated}
-            </p>
-          </button>
         </div>
       </CardContent>
     </motion.div>

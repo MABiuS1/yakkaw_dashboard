@@ -8,12 +8,12 @@ export const FormDialog = ({
   isOpen,
   onOpenChange,
   onSubmit,
-  category,
-  setCategory,
+  form,
+  setForm,
   title,
   submitButtonText,
 }:CategoryFormDialogProps) => {
-  const resetForm = () => setCategory({ id: null, name: "" });
+  const resetForm = () => setForm({ name: "" });
 
   const handleOpenChange = (open: boolean) => {
     if (!open) resetForm();
@@ -37,8 +37,8 @@ export const FormDialog = ({
             <label className="text-sm text-emerald-700">Category Name</label>
             <Input
               placeholder="Category Name"
-              value={category.name}
-              onChange={(e) => setCategory({ ...category, name: e.target.value })}
+              value={form.name}
+              onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
               required
               className="mt-1 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500"
             />

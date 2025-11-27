@@ -14,12 +14,14 @@ import (
 // GetChartData ดึงข้อมูลและ aggregate ค่า pm25 ตามช่วงเวลาที่ระบุ
 // หาก query parameter "province" ถูกส่งมา จะทำการ filter โดยใช้ชื่อจังหวัดที่ trim แล้วเปรียบเทียบแบบเท่ากัน
 // แต่ถ้าไม่ส่ง จะดึงข้อมูลของทุกจังหวัดโดย extract จังหวัดจาก address (โดยใช้ split_part)
-func GetChartData(rangeType string, province string) (models.ChartData, error) {
+func GetChartData(rangeType string, province string, metric string) (models.ChartData, error) {
 	var chartData models.ChartData
 	startTimeMs, endTimeMs := getTimeRange(rangeType)
 	provinceFilter := normalizeProvince(province)
 
-	query, args := buildHourlyQuery(rangeType, provinceFilter, province, startTimeMs, endTimeMs)
+	metricCol := selectMetricColumn(metric)
+
+	query, args := buildHourlyQuery(rangeType, provinceFilter, province, startTimeMs, endTimeMs, metricCol)
 
 	type resultRow struct {
 		Address   string
@@ -104,7 +106,7 @@ func roundToTwoDecimals(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
-func buildHourlyQuery(rangeType, normalizedProvince, rawProvince string, startMs, endMs int64) (string, []interface{}) {
+func buildHourlyQuery(rangeType, normalizedProvince, rawProvince string, startMs, endMs int64, metricCol string) (string, []interface{}) {
 	filters := buildAddressFilters(rawProvince, normalizedProvince)
 	var args []interface{}
 	args = append(args, startMs, endMs)
@@ -117,7 +119,7 @@ func buildHourlyQuery(rangeType, normalizedProvince, rawProvince string, startMs
 				SELECT 
 					address,
 					date_trunc('hour', to_timestamp(timestamp/1000)) as time_label,
-					pm25,
+					` + metricCol + `,
 					ROW_NUMBER() OVER (
 						PARTITION BY address, date_trunc('hour', to_timestamp(timestamp/1000))
 						ORDER BY timestamp DESC
@@ -128,7 +130,7 @@ func buildHourlyQuery(rangeType, normalizedProvince, rawProvince string, startMs
 			SELECT 
 				address,
 				time_label,
-				pm25 as avg_pm25
+				` + metricCol + ` as avg_pm25
 			FROM hourly_data
 			WHERE rn = 1
 			ORDER BY address, time_label
@@ -138,7 +140,7 @@ func buildHourlyQuery(rangeType, normalizedProvince, rawProvince string, startMs
 	return `
 		SELECT address,
 		       date_trunc('hour', to_timestamp(timestamp/1000)) as time_label,
-		       AVG(pm25) as avg_pm25
+		       AVG(` + metricCol + `) as avg_pm25
 		FROM sensor_data
 		WHERE timestamp BETWEEN ? AND ?` + filterClause + `
 		GROUP BY address, time_label
@@ -317,6 +319,62 @@ func deriveProvince(address string) string {
 	}
 
 	return ""
+}
+
+// selectMetricColumn whitelists allowed metric columns to prevent SQL injection.
+func selectMetricColumn(metric string) string {
+	switch strings.ToLower(metric) {
+	case "pm25", "pm10", "pm100", "aqi", "temperature", "humidity", "pres":
+		return metric
+	default:
+		return "pm25"
+	}
+}
+
+// GetHeatmapOneYearDaily returns daily averages for the past year for a given province and metric.
+func GetHeatmapOneYearDaily(province string, metric string) (models.ChartData, error) {
+	var chartData models.ChartData
+	if province == "" {
+		return chartData, nil
+	}
+
+	col := selectMetricColumn(metric)
+
+	baseQuery := `
+        SELECT 
+            date_trunc('day', (to_timestamp(timestamp/1000) AT TIME ZONE 'Asia/Bangkok')) as time_label,
+            AVG(` + col + `) as avg_val
+        FROM sensor_data
+        WHERE (to_timestamp(timestamp/1000) AT TIME ZONE 'Asia/Bangkok') BETWEEN (now() AT TIME ZONE 'Asia/Bangkok') - interval '1 year' AND (now() AT TIME ZONE 'Asia/Bangkok')
+          AND (address ILIKE ? OR place ILIKE ?)
+        GROUP BY time_label
+        ORDER BY time_label ASC
+    `
+
+	type resultRow struct {
+		TimeLabel time.Time
+		AvgVal    float64
+	}
+	var results []resultRow
+
+	if err := database.DB.Raw(baseQuery, "%"+province+"%", "%"+province+"%").Scan(&results).Error; err != nil {
+		return chartData, err
+	}
+
+	labels := make([]string, 0, len(results))
+	values := make([]float64, 0, len(results))
+	for _, r := range results {
+		labels = append(labels, r.TimeLabel.Format("2006-01-02"))
+		values = append(values, roundToTwoDecimals(r.AvgVal))
+	}
+
+	chartData.Labels = labels
+	chartData.Datasets = []models.DatasetChart{{
+		Label: province,
+		Data:  values,
+	}}
+
+	return chartData, nil
 }
 
 func canonicalizeProvince(name string) string {

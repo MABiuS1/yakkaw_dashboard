@@ -108,7 +108,7 @@ func Init(e *echo.Echo) {
 	e.GET("/api/airquality/one_month", airCtl.GetOneMonthDataHandler)
 	e.GET("/api/airquality/three_months", airCtl.GetThreeMonthsDataHandler)
 	e.GET("/api/airquality/one_year", airCtl.GetOneYearDataHandler)
-	e.GET("/api/airquality/one_year_series", controllers.GetAirQualityOneYearSeriesByAddress)
+	e.GET("/api/airquality/one_year_series", controllers.GetAirQualityOneYearSeriesByPlace)
 	e.GET("/api/airquality/one_year_series_by_province", controllers.GetAirQualityOneYearSeriesByProvince)
 	e.GET("/api/airquality/province_average", airCtl.GetProvinceAveragePM25Handler)
 	e.GET("/api/airquality/sensor_data/week", airCtl.GetSensorData7DaysHandler)

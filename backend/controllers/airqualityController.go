@@ -96,17 +96,17 @@ func (ctl *AirQualityController) GetSensorData7DaysHandler(c echo.Context) error
 	return c.JSON(http.StatusOK, data)
 }
 
-func GetAirQualityOneYearSeriesByAddress(c echo.Context) error {
-	address := strings.TrimSpace(c.QueryParam("address"))
-	if address == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "address is required"})
-	}
+func GetAirQualityOneYearSeriesByPlace(c echo.Context) error {
+    place := strings.TrimSpace(c.QueryParam("place"))
+    if place == "" {
+        return c.JSON(http.StatusBadRequest, map[string]string{"error": "place is required"})
+    }
 
-	data, err := services.GetAirQualityOneYearSeriesByAddress(address)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-	return c.JSON(http.StatusOK, data)
+    data, err := services.GetAirQualityOneYearSeriesByPlace(place)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+    }
+    return c.JSON(http.StatusOK, data)
 }
 
 func GetAirQualityOneYearSeriesByProvince(c echo.Context) error {

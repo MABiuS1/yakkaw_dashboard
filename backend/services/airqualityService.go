@@ -328,11 +328,11 @@ func GetSensorData7Days() ([]models.SensorData, error) {
 	return sensorData, nil
 }
 
-// GetAirQualityOneYearSeriesByAddress : ข้อมูลรายวัน 1 ปี สำหรับ heatmap (filter ด้วย address)
-func GetAirQualityOneYearSeriesByAddress(address string) (map[string]interface{}, error) {
-	address = strings.TrimSpace(address)
-	if address == "" {
-		return nil, fmt.Errorf("address is required")
+// GetAirQualityOneYearSeriesByPlace : ข้อมูลรายวัน 1 ปี สำหรับ heatmap (filter ด้วย place)
+func GetAirQualityOneYearSeriesByPlace(place string) (map[string]interface{}, error) {
+	place = strings.TrimSpace(place)
+	if place == "" {
+		return nil, fmt.Errorf("place is required")
 	}
 
 	now := time.Now()
@@ -344,10 +344,10 @@ func GetAirQualityOneYearSeriesByAddress(address string) (map[string]interface{}
 				(to_timestamp(timestamp/1000) AT TIME ZONE 'Asia/Bangkok') AS ts,
 				NULLIF(pm25,0) AS pm25,
 				NULLIF(pm10,0) AS pm10
-			FROM sensor_data
-			WHERE address ILIKE ? AND to_timestamp(timestamp/1000) BETWEEN ? AND ?
-		)
-		SELECT 
+		FROM sensor_data
+		WHERE place ILIKE ? AND to_timestamp(timestamp/1000) BETWEEN ? AND ?
+	)
+	SELECT 
 			date_trunc('day', ts) AS bucket,
 			ROUND(AVG(pm25)::numeric, 2) AS pm25_avg,
 			ROUND(AVG(pm10)::numeric, 2) AS pm10_avg,
@@ -357,8 +357,8 @@ func GetAirQualityOneYearSeriesByAddress(address string) (map[string]interface{}
 		ORDER BY bucket ASC;
 	`
 
-	searchAddress := "%" + address + "%"
-	rows, err := database.DB.Raw(query, searchAddress, from, now).Rows()
+	searchPlace := "%" + place + "%"
+	rows, err := database.DB.Raw(query, searchPlace, from, now).Rows()
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +386,7 @@ func GetAirQualityOneYearSeriesByAddress(address string) (map[string]interface{}
 	}
 
 	return map[string]interface{}{
-		"address":      address,
+		"place":        place,
 		"current_date": now,
 		"past_date":    from,
 		"bucket":       "day",
